@@ -34,27 +34,30 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, otherUser, isCurrent
       transition={{ duration: 0.3 }}
     >
       {!isCurrentUser && (
-        <Avatar className="w-8 h-8 mr-2 self-end">
+        <Avatar className="w-8 h-8 mr-2 self-end border-2 border-white">
           <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
           <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
         </Avatar>
       )}
       
-      <div className={`max-w-[70%] ${isCurrentUser ? 'text-right' : ''}`}>
-        <div className={`${
-          isCurrentUser 
-            ? 'bg-primary text-white rounded-lg rounded-br-none'
-            : 'bg-white rounded-lg rounded-bl-none'
-          } p-3 shadow-sm inline-block`}
+      <div className={`max-w-[75%] ${isCurrentUser ? 'text-right' : ''}`}>
+        <div 
+          className={isCurrentUser ? 'message-bubble-sent' : 'message-bubble-received'}
         >
           <p className="text-sm">{message.content}</p>
         </div>
         
-        <div className={`flex text-xs text-gray-500 mt-1 ${isCurrentUser ? 'justify-end' : 'ml-2'}`}>
+        <div className={`flex items-center text-[10px] text-gray-500 mt-1 ${isCurrentUser ? 'justify-end' : 'ml-2'}`}>
           <span className={isCurrentUser ? 'mr-1' : ''}>{formatChatTime(message.createdAt)}</span>
           
-          {isCurrentUser && message.read && (
-            <CheckCircle2 className="h-3 w-3 text-blue-500 ml-1" />
+          {isCurrentUser && (
+            <span className="ml-1">
+              {message.read ? (
+                <CheckCircle2 className="h-3 w-3 text-primary fill-primary" />
+              ) : (
+                <CheckCircle2 className="h-3 w-3 text-gray-400" />
+              )}
+            </span>
           )}
         </div>
       </div>
