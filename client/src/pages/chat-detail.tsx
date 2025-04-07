@@ -157,7 +157,7 @@ const ChatDetail: React.FC = () => {
 
   return (
     <MainLayout hideBottomNav>
-      <div className="app-container flex flex-col h-screen">
+      <div className="app-container flex flex-col h-[100dvh] overflow-hidden">
         <header className="bg-white p-3 sticky top-0 z-10 shadow-sm">
           <div className="flex items-center">
             <Button 

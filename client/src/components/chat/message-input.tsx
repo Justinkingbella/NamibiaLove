@@ -26,7 +26,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
   
   return (
-    <div className="bg-white p-3 shadow-md">
+    <div className="bg-white p-2 shadow-md border-t border-gray-100">
       <div className="flex items-center gap-2">
         {isRecording ? (
           <div className="flex-1 voice-message">
@@ -41,7 +41,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             <Input
               type="text"
               placeholder="Message..."
-              className="w-full rounded-full px-4 py-5 focus-visible:ring-1 focus-visible:ring-primary border-gray-100 bg-white shadow-sm pl-10"
+              className="w-full rounded-full px-4 py-3 focus-visible:ring-1 focus-visible:ring-primary border-gray-100 bg-white shadow-sm pl-10"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               onKeyDown={(e) => {
@@ -73,7 +73,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         <Button
           size="icon"
           variant={isRecording ? "destructive" : "outline"}
-          className="rounded-full w-12 h-12 border-none bg-white shadow-md"
+          className="rounded-full w-10 h-10 border-none bg-white shadow-md"
           onClick={isRecording ? handleVoiceMessage : undefined}
         >
           {isRecording ? (
@@ -86,7 +86,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         {value.trim() && !isRecording && (
           <Button
             size="icon"
-            className="rounded-full w-12 h-12 bg-primary hover:bg-primary/90 text-white shadow-md"
+            className="rounded-full w-10 h-10 bg-primary hover:bg-primary/90 text-white shadow-md"
             onClick={onSend}
             disabled={!value.trim() || disabled}
           >
