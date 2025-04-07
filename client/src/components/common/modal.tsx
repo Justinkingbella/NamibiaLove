@@ -11,7 +11,7 @@ interface ModalProps {
   className?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({
+const ModalDialog: React.FC<ModalProps> = ({
   isOpen,
   onClose,
   title,
@@ -19,7 +19,7 @@ const Modal: React.FC<ModalProps> = ({
   className,
 }) => {
   return (
-    <Transition show={isOpen} as={Fragment}>
+    <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={onClose}>
         <div className="min-h-screen px-4 text-center">
           <Transition.Child
@@ -31,7 +31,7 @@ const Modal: React.FC<ModalProps> = ({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Overlay className="fixed inset-0 bg-black/75 transition-opacity" />
+            <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" />
           </Transition.Child>
 
           {/* This element is to trick the browser into centering the modal contents. */}
@@ -90,4 +90,4 @@ const Modal: React.FC<ModalProps> = ({
   );
 };
 
-export default Modal;
+export default ModalDialog;

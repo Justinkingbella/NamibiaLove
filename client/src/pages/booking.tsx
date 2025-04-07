@@ -27,7 +27,7 @@ import {
 import { MapPin, Loader2, CalendarIcon, Clock } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
-import Modal from '@/components/common/modal';
+import ModalDialog from '@/components/common/modal';
 
 interface User {
   id: number;
@@ -273,7 +273,7 @@ const BookingPage: React.FC = () => {
           </Button>
         </form>
         
-        <Modal
+        <ModalDialog
           isOpen={showSuccessModal}
           onClose={handleCloseSuccess}
           title="Date Request Sent!"
@@ -294,7 +294,7 @@ const BookingPage: React.FC = () => {
               Done
             </Button>
           </div>
-        </Modal>
+        </ModalDialog>
       </div>
     </MainLayout>
   );

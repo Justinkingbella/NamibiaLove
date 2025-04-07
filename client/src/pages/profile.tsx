@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Settings, LogOut, Edit, Heart, Calendar, UserPlus, UserMinus, Loader2, Grid3X3, BookmarkIcon, UserIcon } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
-import Modal from '@/components/common/modal';
+import ModalDialog from '@/components/common/modal';
 
 interface User {
   id: number;
@@ -322,7 +322,7 @@ const Profile: React.FC<ProfileProps> = ({ isCurrentUser: propIsCurrentUser }) =
       </Tabs>
       
       {/* Logout confirmation modal */}
-      <Modal
+      <ModalDialog
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
         title="Log Out"
@@ -346,7 +346,7 @@ const Profile: React.FC<ProfileProps> = ({ isCurrentUser: propIsCurrentUser }) =
             </Button>
           </div>
         </div>
-      </Modal>
+      </ModalDialog>
     </MainLayout>
   );
 };

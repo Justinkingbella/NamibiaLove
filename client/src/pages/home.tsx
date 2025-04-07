@@ -5,7 +5,7 @@ import TopPicks from '@/components/match/top-picks';
 import EventList from '@/components/events/event-list';
 import PostCard from '@/components/posts/post-card';
 import MatchCard from '@/components/match/match-card';
-import Modal from '@/components/common/modal';
+import ModalDialog from '@/components/common/modal';
 import { useQuery } from '@tanstack/react-query';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -164,7 +164,7 @@ const Home: React.FC = () => {
 
       {/* Match Modal */}
       {matchedUser && (
-        <Modal 
+        <ModalDialog 
           isOpen={showMatchModal} 
           onClose={() => setShowMatchModal(false)}
           title="It's a Match!"
@@ -200,7 +200,7 @@ const Home: React.FC = () => {
               </button>
             </div>
           </div>
-        </Modal>
+        </ModalDialog>
       )}
     </MainLayout>
   );
