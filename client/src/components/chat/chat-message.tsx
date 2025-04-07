@@ -27,18 +27,18 @@ interface ChatMessageProps {
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, otherUser, isCurrentUser }) => {
   const bubbleStyles = isCurrentUser 
-    ? "bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2 shadow-sm"
-    : "bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 shadow-sm";
+    ? "bg-primary text-white rounded-full rounded-tr-sm px-4 py-2.5 shadow-sm"
+    : "bg-gray-100 text-gray-800 rounded-full rounded-tl-sm px-4 py-2.5 shadow-sm";
 
   return (
     <motion.div 
-      className={`flex mb-4 ${isCurrentUser ? 'justify-end' : ''}`}
+      className={`flex mb-2.5 ${isCurrentUser ? 'justify-end' : ''}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       {!isCurrentUser && (
-        <Avatar className="w-10 h-10 mr-2 self-end">
+        <Avatar className="w-8 h-8 mr-2 self-end">
           <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
           <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
         </Avatar>

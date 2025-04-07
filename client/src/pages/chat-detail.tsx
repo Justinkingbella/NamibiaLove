@@ -158,7 +158,7 @@ const ChatDetail: React.FC = () => {
   return (
     <MainLayout hideBottomNav>
       <div className="app-container flex flex-col h-[100dvh] overflow-hidden">
-        <header className="bg-white p-3 sticky top-0 z-10 shadow-sm">
+        <header className="bg-white px-3 py-2 sticky top-0 z-10 shadow-sm border-b border-gray-100">
           <div className="flex items-center">
             <Button 
               variant="ghost" 
@@ -203,7 +203,7 @@ const ChatDetail: React.FC = () => {
           </div>
         </header>
         
-        <div className="bg-[#f9f9fb] flex-1 overflow-hidden">
+        <div className="bg-gray-50 flex-1 overflow-hidden">
           <div 
             ref={chatContainerRef}
             className="p-4 h-full overflow-y-auto pb-2"
@@ -236,12 +236,12 @@ const ChatDetail: React.FC = () => {
                     ))}
                     
                     {isTyping && (
-                      <div className="flex mb-4">
-                        <Avatar className="w-10 h-10 mr-2 self-end">
+                      <div className="flex mb-2.5">
+                        <Avatar className="w-8 h-8 mr-2 self-end">
                           <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
                           <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
                         </Avatar>
-                        <div className="bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 shadow-sm inline-flex">
+                        <div className="bg-gray-100 text-gray-800 rounded-full rounded-tl-sm px-4 py-2.5 shadow-sm inline-flex">
                           <div className="flex space-x-1 py-1">
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
