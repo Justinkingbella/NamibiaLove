@@ -26,7 +26,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
   
   return (
-    <div className="sticky bottom-0 left-0 right-0 bg-white p-3 shadow-md">
+    <div className="bg-white p-3 shadow-md">
       <div className="flex items-center gap-2">
         {isRecording ? (
           <div className="flex-1 voice-message">

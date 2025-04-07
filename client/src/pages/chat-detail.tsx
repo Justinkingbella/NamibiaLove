@@ -157,7 +157,7 @@ const ChatDetail: React.FC = () => {
 
   return (
     <MainLayout hideBottomNav>
-      <div className="app-container">
+      <div className="app-container flex flex-col h-screen">
         <header className="bg-white p-3 sticky top-0 z-10 shadow-sm">
           <div className="flex items-center">
             <Button 
@@ -203,10 +203,10 @@ const ChatDetail: React.FC = () => {
           </div>
         </header>
         
-        <div className="bg-[#f9f9fb]">
+        <div className="bg-[#f9f9fb] flex-1 overflow-hidden">
           <div 
             ref={chatContainerRef}
-            className="p-4 h-[calc(100vh-145px)] overflow-y-auto"
+            className="p-4 h-full overflow-y-auto pb-2"
           >
             {messagesLoading ? (
               <div className="flex justify-center items-center h-full">
@@ -269,13 +269,15 @@ const ChatDetail: React.FC = () => {
           </div>
         </div>
         
-        <MessageInput
-          value={newMessage}
-          onChange={handleInputChange}
-          onSend={handleSendMessage}
-          disabled={sendMessageMutation.isPending}
-          isLoading={sendMessageMutation.isPending}
-        />
+        <div className="mt-auto">
+          <MessageInput
+            value={newMessage}
+            onChange={handleInputChange}
+            onSend={handleSendMessage}
+            disabled={sendMessageMutation.isPending}
+            isLoading={sendMessageMutation.isPending}
+          />
+        </div>
       </div>
     </MainLayout>
   );
