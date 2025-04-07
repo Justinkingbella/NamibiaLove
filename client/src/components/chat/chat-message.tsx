@@ -26,6 +26,10 @@ interface ChatMessageProps {
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, otherUser, isCurrentUser }) => {
+  const bubbleStyles = isCurrentUser 
+    ? "bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2 shadow-sm"
+    : "bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 shadow-sm";
+
   return (
     <motion.div 
       className={`flex mb-4 ${isCurrentUser ? 'justify-end' : ''}`}
@@ -34,26 +38,24 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, otherUser, isCurrent
       transition={{ duration: 0.3 }}
     >
       {!isCurrentUser && (
-        <Avatar className="w-8 h-8 mr-2 self-end border-2 border-white">
+        <Avatar className="w-10 h-10 mr-2 self-end">
           <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
           <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
         </Avatar>
       )}
       
       <div className={`max-w-[75%] ${isCurrentUser ? 'text-right' : ''}`}>
-        <div 
-          className={isCurrentUser ? 'message-bubble-sent' : 'message-bubble-received'}
-        >
+        <div className={bubbleStyles}>
           <p className="text-sm">{message.content}</p>
         </div>
         
-        <div className={`flex items-center text-[10px] text-gray-500 mt-1 ${isCurrentUser ? 'justify-end' : 'ml-2'}`}>
+        <div className={`flex items-center text-[10px] text-gray-400 mt-1 ${isCurrentUser ? 'justify-end' : 'ml-2'}`}>
           <span className={isCurrentUser ? 'mr-1' : ''}>{formatChatTime(message.createdAt)}</span>
           
           {isCurrentUser && (
             <span className="ml-1">
               {message.read ? (
-                <CheckCircle2 className="h-3 w-3 text-primary fill-primary" />
+                <CheckCircle2 className="h-3 w-3 text-primary" />
               ) : (
                 <CheckCircle2 className="h-3 w-3 text-gray-400" />
               )}

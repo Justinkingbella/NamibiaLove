@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image, Smile, Send, Paperclip, Loader2 } from 'lucide-react';
+import { Mic, Smile, Send, Paperclip, Loader2, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -19,59 +19,84 @@ const MessageInput: React.FC<MessageInputProps> = ({
   disabled = false,
   isLoading = false
 }) => {
+  const [isRecording, setIsRecording] = useState(false);
+  
+  const handleVoiceMessage = () => {
+    setIsRecording(!isRecording);
+  };
+  
   return (
-    <div className="sticky bottom-0 left-0 right-0 bg-white">
-      <div className="flex items-center py-2 px-3">
-        <div className="flex-1 pr-2">
-          <Input
-            type="text"
-            placeholder="Write your message here"
-            className="w-full rounded-2xl px-4 py-3 focus-visible:ring-1 focus-visible:ring-primary border-gray-200 shadow-sm"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey && !disabled) {
-                e.preventDefault();
-                onSend();
-              }
-            }}
-            disabled={disabled}
-          />
-        </div>
+    <div className="sticky bottom-0 left-0 right-0 bg-white p-3 shadow-md">
+      <div className="flex items-center gap-2">
+        {isRecording ? (
+          <div className="flex-1 voice-message">
+            <Mic className="h-5 w-5 text-primary animate-pulse" />
+            <div className="bg-primary/10 h-6 w-full rounded-full overflow-hidden flex items-center">
+              <div className="h-full w-1/3 bg-primary/30 animate-pulse rounded-full"></div>
+            </div>
+            <span className="text-xs text-gray-500 min-w-[32px] text-center">0:15</span>
+          </div>
+        ) : (
+          <div className="flex-1 relative">
+            <Input
+              type="text"
+              placeholder="Message..."
+              className="w-full rounded-full px-4 py-5 focus-visible:ring-1 focus-visible:ring-primary border-gray-100 bg-white shadow-sm pl-10"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !disabled) {
+                  e.preventDefault();
+                  onSend();
+                }
+              }}
+              disabled={disabled}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 h-7 w-7 rounded-full"
+            >
+              <Smile className="h-5 w-5 text-gray-400" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-7 w-7 rounded-full"
+            >
+              <Image className="h-5 w-5 text-gray-400" />
+            </Button>
+          </div>
+        )}
         
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full w-10 h-10 border-none bg-gray-100"
-          >
-            <Smile className="h-5 w-5 text-gray-600" />
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full w-10 h-10 border-none bg-gray-100"
-          >
-            <Paperclip className="h-5 w-5 text-gray-600" />
-          </Button>
-          
+        <Button
+          size="icon"
+          variant={isRecording ? "destructive" : "outline"}
+          className="rounded-full w-12 h-12 border-none bg-white shadow-md"
+          onClick={isRecording ? handleVoiceMessage : undefined}
+        >
+          {isRecording ? (
+            <div className="h-4 w-4 rounded bg-destructive"></div>
+          ) : (
+            <Mic className="h-5 w-5 text-primary" onClick={handleVoiceMessage} />
+          )}
+        </Button>
+        
+        {value.trim() && !isRecording && (
           <Button
             size="icon"
-            className={cn(
-              "rounded-full w-10 h-10 ml-1",
-              value.trim() ? "bg-primary hover:bg-primary/90 text-white" : "bg-gray-200 text-gray-500"
-            )}
+            className="rounded-full w-12 h-12 bg-primary hover:bg-primary/90 text-white shadow-md"
             onClick={onSend}
             disabled={!value.trim() || disabled}
           >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <Send className="h-5 w-5" fill="currentColor" />
+              <Send className="h-5 w-5" />
             )}
           </Button>
-        </div>
+        )}
       </div>
     </div>
   );

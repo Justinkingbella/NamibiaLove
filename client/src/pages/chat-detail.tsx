@@ -157,124 +157,126 @@ const ChatDetail: React.FC = () => {
 
   return (
     <MainLayout hideBottomNav>
-      <header className="bg-white p-3 sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full hover:bg-gray-100 w-10 h-10" 
-            onClick={() => setLocation('/chat')}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          
-          <Link href={`/profile/${otherUser.id}`}>
-            <div className="flex items-center ml-3">
-              <Avatar className="h-12 w-12 border-2 border-primary/10">
-                <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
-                <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
-              </Avatar>
-              
-              <div className="ml-3">
-                <h3 className="font-semibold text-gray-900">{otherUser.fullName}</h3>
-                <div className="flex items-center text-xs">
-                  {wsStatus === 'open' ? (
-                    <span className="text-green-500 flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
-                      Online
-                    </span>
-                  ) : (
-                    <span className="text-gray-500">Offline</span>
-                  )}
+      <div className="app-container">
+        <header className="bg-white p-3 sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full hover:bg-gray-100 w-10 h-10" 
+              onClick={() => setLocation('/chat')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            
+            <Link href={`/profile/${otherUser.id}`}>
+              <div className="flex items-center ml-2">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
+                  <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
+                </Avatar>
+                
+                <div className="ml-2">
+                  <h3 className="font-semibold text-gray-900 text-sm">{otherUser.fullName}</h3>
+                  <div className="flex items-center text-xs">
+                    {wsStatus === 'open' ? (
+                      <span className="text-green-500 flex items-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1"></div>
+                        Online
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">Offline</span>
+                    )}
+                  </div>
                 </div>
               </div>
+            </Link>
+            
+            <div className="ml-auto flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 text-primary">
+                <Phone className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 text-primary">
+                <Video className="h-4 w-4" />
+              </Button>
             </div>
-          </Link>
-          
-          <div className="ml-auto flex items-center space-x-2">
-            <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-none bg-gray-100 hover:bg-gray-200">
-              <Phone className="h-5 w-5 text-gray-700" />
-            </Button>
-            <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-none bg-gray-100 hover:bg-gray-200">
-              <Video className="h-5 w-5 text-gray-700" />
-            </Button>
           </div>
-        </div>
-      </header>
-      
-      <div className="bg-[#f8f9fb]">
-        <div 
-          ref={chatContainerRef}
-          className="p-4 h-[calc(100vh-145px)] overflow-y-auto"
-        >
-          {messagesLoading ? (
-            <div className="flex justify-center items-center h-full">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              {messages && messages.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="flex justify-center">
-                    <div className="text-xs font-medium text-gray-500 bg-white px-4 py-1 rounded-full shadow-sm my-4">
-                      {messages[0]?.createdAt ? (
-                        `Today, ${formatChatTime(messages[0].createdAt)}`
-                      ) : (
-                        'Today'
-                      )}
+        </header>
+        
+        <div className="bg-[#f9f9fb]">
+          <div 
+            ref={chatContainerRef}
+            className="p-4 h-[calc(100vh-145px)] overflow-y-auto"
+          >
+            {messagesLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                {messages && messages.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="flex justify-center">
+                      <div className="text-xs font-medium text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm my-3">
+                        {messages[0]?.createdAt ? (
+                          `Today, ${formatChatTime(messages[0].createdAt)}`
+                        ) : (
+                          'Today'
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  {messages.map((message) => (
-                    <ChatMessage
-                      key={message.id}
-                      message={message}
-                      otherUser={otherUser}
-                      isCurrentUser={message.senderId === user?.id}
-                    />
-                  ))}
-                  
-                  {isTyping && (
-                    <div className="flex mb-4">
-                      <Avatar className="w-8 h-8 mr-2 self-end border-2 border-white">
-                        <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
-                        <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
-                      </Avatar>
-                      <div className="message-bubble-received inline-flex">
-                        <div className="flex space-x-1 py-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    
+                    {messages.map((message) => (
+                      <ChatMessage
+                        key={message.id}
+                        message={message}
+                        otherUser={otherUser}
+                        isCurrentUser={message.senderId === user?.id}
+                      />
+                    ))}
+                    
+                    {isTyping && (
+                      <div className="flex mb-4">
+                        <Avatar className="w-10 h-10 mr-2 self-end">
+                          <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
+                          <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
+                        </Avatar>
+                        <div className="bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 shadow-sm inline-flex">
+                          <div className="flex space-x-1 py-1">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
-                    <div className="w-20 h-20 rounded-full bg-primary/10 mx-auto mb-6 flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                        <div className="w-6 h-6 rounded-full bg-primary"></div>
-                      </div>
-                    </div>
-                    <p className="font-semibold text-gray-900 mb-2 text-lg">Start a conversation</p>
-                    <p className="text-sm text-gray-500">Send your first message to connect with {otherUser.fullName}</p>
+                    )}
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 mx-auto mb-4 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                          <div className="w-5 h-5 rounded-full bg-primary"></div>
+                        </div>
+                      </div>
+                      <p className="font-semibold text-gray-900 mb-1 text-lg">Start a conversation</p>
+                      <p className="text-sm text-gray-500">Send your first message to connect</p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
+        
+        <MessageInput
+          value={newMessage}
+          onChange={handleInputChange}
+          onSend={handleSendMessage}
+          disabled={sendMessageMutation.isPending}
+          isLoading={sendMessageMutation.isPending}
+        />
       </div>
-      
-      <MessageInput
-        value={newMessage}
-        onChange={handleInputChange}
-        onSend={handleSendMessage}
-        disabled={sendMessageMutation.isPending}
-        isLoading={sendMessageMutation.isPending}
-      />
     </MainLayout>
   );
 };

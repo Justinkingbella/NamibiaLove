@@ -4,15 +4,15 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 20% 98%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 278 98% 52%;
+    --primary: 346 100% 58%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 340 82% 60%;
+    --secondary: 346 100% 58%;
     --secondary-foreground: 0 0% 100%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -22,11 +22,11 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 278 98% 52%;
+    --ring: 346 100% 58%;
     --radius: 1.5rem;
-    --chart-1: 278 98% 52%;
-    --chart-2: 340 82% 60%;
-    --chart-3: 0 84.2% 60.2%;
+    --chart-1: 346 100% 58%;
+    --chart-2: 262 83% 58%;
+    --chart-3: 200 95% 56%;
     --chart-4: 214.3 31.8% 91.4%;
     --chart-5: 222.2 84% 4.9%;
   }
@@ -38,9 +38,9 @@
     --card-foreground: 210 40% 98%;
     --popover: 240 23% 14%;
     --popover-foreground: 210 40% 98%;
-    --primary: 278 98% 52%;
+    --primary: 346 100% 58%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 340 82% 60%;
+    --secondary: 262 83% 58%;
     --secondary-foreground: 0 0% 100%;
     --muted: 240 23% 24%;
     --muted-foreground: 215 20.2% 65.1%;
@@ -50,7 +50,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 240 23% 20%;
     --input: 240 23% 20%;
-    --ring: 278 98% 52%;
+    --ring: 346 100% 58%;
   }
 
   * {
@@ -64,7 +64,7 @@
 
 @layer components {
   .story-circle {
-    background: linear-gradient(45deg, #b80bfe, #f03aa9, #ff4599);
+    background: linear-gradient(45deg, #ff3366, #ff5f6d, #ff7e80);
   }
 
   .hide-scrollbar::-webkit-scrollbar {
@@ -77,15 +77,15 @@
   }
   
   .modern-shadow {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
   }
   
   .message-bubble-sent {
-    @apply bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2;
+    @apply bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2 shadow-sm;
   }
   
   .message-bubble-received {
-    @apply bg-accent text-foreground rounded-2xl rounded-tl-sm px-4 py-2;
+    @apply bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 shadow-sm;
   }
   
   .profile-card {
@@ -110,5 +110,79 @@
   
   .nav-icon.active {
     @apply text-primary;
+  }
+  
+  /* New styles based on the design */
+  .app-container {
+    @apply max-w-md mx-auto bg-background overflow-hidden relative;
+    height: 100vh;
+  }
+  
+  .messages-list {
+    @apply bg-white rounded-3xl p-4 shadow-xl;
+  }
+  
+  .message-preview {
+    @apply flex items-center p-3 rounded-2xl mb-2 hover:bg-gray-50 transition-colors;
+  }
+  
+  .message-preview.unread {
+    @apply bg-pink-50;
+  }
+  
+  .message-preview .badge {
+    @apply h-6 w-6 flex items-center justify-center rounded-full bg-primary text-white text-xs;
+  }
+  
+  .stories-row {
+    @apply flex gap-2 pb-4 overflow-x-auto hide-scrollbar;
+  }
+  
+  .story-avatar {
+    @apply w-16 h-16 rounded-full p-0.5;
+  }
+  
+  .story-avatar img {
+    @apply rounded-full w-full h-full object-cover;
+  }
+  
+  .post-card {
+    @apply bg-white rounded-3xl overflow-hidden mb-4 shadow-md;
+  }
+  
+  .post-header {
+    @apply flex items-center justify-between p-3;
+  }
+  
+  .post-image {
+    @apply w-full aspect-square object-cover;
+  }
+  
+  .post-actions {
+    @apply flex justify-between p-3;
+  }
+  
+  .voice-message {
+    @apply flex items-center gap-3 bg-gray-50 rounded-full p-3 px-4;
+  }
+  
+  .share-modal {
+    @apply bg-white rounded-3xl p-5 shadow-2xl;
+  }
+  
+  .share-contacts {
+    @apply grid grid-cols-4 gap-3 mt-4;
+  }
+  
+  .share-contact {
+    @apply flex flex-col items-center;
+  }
+  
+  .share-contact-avatar {
+    @apply w-14 h-14 rounded-full overflow-hidden mb-1;
+  }
+  
+  .share-button {
+    @apply w-full bg-primary text-white rounded-full py-3 mt-4;
   }
 }
