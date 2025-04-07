@@ -11,6 +11,8 @@ import {
   dateBookings, DateBooking, InsertDateBooking,
   eventAttendees, EventAttendee, InsertEventAttendee
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, or, desc, count, gt, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -765,4 +767,470 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
+
+  async listUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+  
+  // Match methods
+  async createMatch(match: InsertMatch): Promise<Match> {
+    const [newMatch] = await db.insert(matches).values(match).returning();
+    return newMatch;
+  }
+
+  async getMatch(userId1: number, userId2: number): Promise<Match | undefined> {
+    const [match] = await db
+      .select()
+      .from(matches)
+      .where(
+        or(
+          and(eq(matches.userId1, userId1), eq(matches.userId2, userId2)),
+          and(eq(matches.userId1, userId2), eq(matches.userId2, userId1))
+        )
+      );
+    return match || undefined;
+  }
+
+  async updateMatchStatus(id: number, status: string): Promise<Match | undefined> {
+    const [updatedMatch] = await db
+      .update(matches)
+      .set({ status })
+      .where(eq(matches.id, id))
+      .returning();
+    return updatedMatch || undefined;
+  }
+
+  async getMatchesByUser(userId: number): Promise<Match[]> {
+    return await db
+      .select()
+      .from(matches)
+      .where(
+        or(
+          eq(matches.userId1, userId),
+          eq(matches.userId2, userId)
+        )
+      );
+  }
+
+  // Message methods
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db.insert(messages).values(message).returning();
+    return newMessage;
+  }
+
+  async getMessagesBetweenUsers(user1Id: number, user2Id: number): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(
+        or(
+          and(eq(messages.senderId, user1Id), eq(messages.receiverId, user2Id)),
+          and(eq(messages.senderId, user2Id), eq(messages.receiverId, user1Id))
+        )
+      )
+      .orderBy(messages.createdAt);
+  }
+
+  async markMessagesAsRead(senderId: number, receiverId: number): Promise<void> {
+    await db
+      .update(messages)
+      .set({ read: true })
+      .where(
+        and(
+          eq(messages.senderId, senderId),
+          eq(messages.receiverId, receiverId),
+          eq(messages.read, false)
+        )
+      );
+  }
+
+  async getUnreadMessageCount(userId: number): Promise<number> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(messages)
+      .where(
+        and(
+          eq(messages.receiverId, userId),
+          eq(messages.read, false)
+        )
+      );
+    return result?.count || 0;
+  }
+
+  async getConversations(userId: number): Promise<{ userId: number, lastMessage: Message }[]> {
+    // Get distinct conversation partners
+    const partners = await db
+      .selectDistinct({
+        partnerId: sql<number>`
+          CASE 
+            WHEN ${messages.senderId} = ${userId} THEN ${messages.receiverId}
+            ELSE ${messages.senderId}
+          END
+        `
+      })
+      .from(messages)
+      .where(
+        or(
+          eq(messages.senderId, userId),
+          eq(messages.receiverId, userId)
+        )
+      );
+
+    // For each partner, get the most recent message
+    const conversations = await Promise.all(
+      partners.map(async ({ partnerId }) => {
+        const [lastMessage] = await db
+          .select()
+          .from(messages)
+          .where(
+            or(
+              and(eq(messages.senderId, userId), eq(messages.receiverId, partnerId)),
+              and(eq(messages.senderId, partnerId), eq(messages.receiverId, userId))
+            )
+          )
+          .orderBy(desc(messages.createdAt))
+          .limit(1);
+        
+        const [partner] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, partnerId));
+        
+        return {
+          userId: partnerId,
+          user: partner,
+          lastMessage
+        };
+      })
+    );
+    
+    // Sort by most recent message
+    return conversations
+      .filter(conv => conv.lastMessage) // Ensure we have a lastMessage
+      .sort((a, b) => 
+        new Date(b.lastMessage.createdAt).getTime() - 
+        new Date(a.lastMessage.createdAt).getTime()
+      );
+  }
+  
+  // Story methods
+  async createStory(story: InsertStory): Promise<Story> {
+    const [newStory] = await db.insert(stories).values(story).returning();
+    return newStory;
+  }
+
+  async getStoriesByUser(userId: number): Promise<Story[]> {
+    return await db
+      .select()
+      .from(stories)
+      .where(eq(stories.userId, userId))
+      .orderBy(desc(stories.createdAt));
+  }
+
+  async getActiveStories(): Promise<Story[]> {
+    const now = new Date();
+    
+    // Get all stories where expiresAt is in the future
+    const activeStories = await db
+      .select({
+        story: stories,
+        user: users
+      })
+      .from(stories)
+      .innerJoin(users, eq(stories.userId, users.id))
+      .where(gt(stories.expiresAt, now))
+      .orderBy(desc(stories.createdAt));
+    
+    // Format the result
+    return activeStories.map(({ story, user }) => ({
+      ...story,
+      user
+    }));
+  }
+  
+  // Post methods
+  async createPost(post: InsertPost): Promise<Post> {
+    const [newPost] = await db.insert(posts).values(post).returning();
+    return newPost;
+  }
+
+  async getPost(id: number): Promise<Post | undefined> {
+    const [post] = await db
+      .select()
+      .from(posts)
+      .where(eq(posts.id, id));
+    return post || undefined;
+  }
+
+  async getPostsByUser(userId: number): Promise<Post[]> {
+    return await db
+      .select()
+      .from(posts)
+      .where(eq(posts.userId, userId))
+      .orderBy(desc(posts.createdAt));
+  }
+
+  async getFeedForUser(userId: number): Promise<Post[]> {
+    // Get IDs of users that the current user follows
+    const following = await db
+      .select({ followingId: follows.followingId })
+      .from(follows)
+      .where(eq(follows.followerId, userId));
+    
+    const followingIds = following.map(f => f.followingId);
+    followingIds.push(userId); // Include the user's own posts
+    
+    // If followingIds is empty, just use userId to avoid SQL errors
+    if (followingIds.length === 0) {
+      followingIds.push(userId);
+    }
+    
+    // Get posts from the followed users and the user's own posts
+    const result = await db
+      .select()
+      .from(posts)
+      .where(inArray(posts.userId, followingIds))
+      .orderBy(desc(posts.createdAt));
+      
+    return result;
+  }
+  
+  // Comment methods
+  async createComment(comment: InsertComment): Promise<Comment> {
+    const [newComment] = await db.insert(comments).values(comment).returning();
+    return newComment;
+  }
+
+  async getCommentsByPost(postId: number): Promise<Comment[]> {
+    return await db
+      .select()
+      .from(comments)
+      .where(eq(comments.postId, postId))
+      .orderBy(comments.createdAt);
+  }
+  
+  // Like methods
+  async createLike(like: InsertLike): Promise<Like> {
+    const [newLike] = await db.insert(likes).values(like).returning();
+    return newLike;
+  }
+
+  async deleteLike(postId: number, userId: number): Promise<void> {
+    await db
+      .delete(likes)
+      .where(
+        and(
+          eq(likes.postId, postId),
+          eq(likes.userId, userId)
+        )
+      );
+  }
+
+  async getLikesByPost(postId: number): Promise<Like[]> {
+    return await db
+      .select()
+      .from(likes)
+      .where(eq(likes.postId, postId));
+  }
+
+  async checkUserLiked(postId: number, userId: number): Promise<boolean> {
+    const [like] = await db
+      .select()
+      .from(likes)
+      .where(
+        and(
+          eq(likes.postId, postId),
+          eq(likes.userId, userId)
+        )
+      );
+    return !!like;
+  }
+  
+  // Follow methods
+  async createFollow(follow: InsertFollow): Promise<Follow> {
+    const [newFollow] = await db.insert(follows).values(follow).returning();
+    return newFollow;
+  }
+
+  async deleteFollow(followerId: number, followingId: number): Promise<void> {
+    await db
+      .delete(follows)
+      .where(
+        and(
+          eq(follows.followerId, followerId),
+          eq(follows.followingId, followingId)
+        )
+      );
+  }
+
+  async getFollowers(userId: number): Promise<User[]> {
+    const followers = await db
+      .select({
+        follower: users
+      })
+      .from(follows)
+      .innerJoin(users, eq(follows.followerId, users.id))
+      .where(eq(follows.followingId, userId));
+    
+    return followers.map(f => f.follower);
+  }
+
+  async getFollowing(userId: number): Promise<User[]> {
+    const following = await db
+      .select({
+        following: users
+      })
+      .from(follows)
+      .innerJoin(users, eq(follows.followingId, users.id))
+      .where(eq(follows.followerId, userId));
+    
+    return following.map(f => f.following);
+  }
+
+  async checkUserFollows(followerId: number, followingId: number): Promise<boolean> {
+    const [follow] = await db
+      .select()
+      .from(follows)
+      .where(
+        and(
+          eq(follows.followerId, followerId),
+          eq(follows.followingId, followingId)
+        )
+      );
+    return !!follow;
+  }
+  
+  // Event methods
+  async createEvent(event: InsertEvent): Promise<Event> {
+    const [newEvent] = await db.insert(events).values(event).returning();
+    return newEvent;
+  }
+
+  async getEvent(id: number): Promise<Event | undefined> {
+    const [event] = await db
+      .select()
+      .from(events)
+      .where(eq(events.id, id));
+    return event || undefined;
+  }
+
+  async listEvents(): Promise<Event[]> {
+    return await db
+      .select()
+      .from(events)
+      .orderBy(events.date);
+  }
+
+  async getEventsByUser(userId: number): Promise<Event[]> {
+    return await db
+      .select()
+      .from(events)
+      .where(eq(events.createdBy, userId))
+      .orderBy(events.date);
+  }
+  
+  // DateBooking methods
+  async createDateBooking(booking: InsertDateBooking): Promise<DateBooking> {
+    const [newDateBooking] = await db.insert(dateBookings).values(booking).returning();
+    return newDateBooking;
+  }
+
+  async getDateBooking(id: number): Promise<DateBooking | undefined> {
+    const [dateBooking] = await db
+      .select()
+      .from(dateBookings)
+      .where(eq(dateBookings.id, id));
+    return dateBooking || undefined;
+  }
+
+  async updateDateBookingStatus(id: number, status: string): Promise<DateBooking | undefined> {
+    const [updatedBooking] = await db
+      .update(dateBookings)
+      .set({ status })
+      .where(eq(dateBookings.id, id))
+      .returning();
+    return updatedBooking || undefined;
+  }
+
+  async getDateBookingsByUser(userId: number): Promise<DateBooking[]> {
+    return await db
+      .select()
+      .from(dateBookings)
+      .where(
+        or(
+          eq(dateBookings.requesterId, userId),
+          eq(dateBookings.recipientId, userId)
+        )
+      )
+      .orderBy(desc(dateBookings.createdAt));
+  }
+  
+  // EventAttendee methods
+  async createEventAttendee(attendee: InsertEventAttendee): Promise<EventAttendee> {
+    const [newEventAttendee] = await db.insert(eventAttendees).values(attendee).returning();
+    return newEventAttendee;
+  }
+
+  async updateEventAttendeeStatus(eventId: number, userId: number, status: string): Promise<EventAttendee | undefined> {
+    const [updatedAttendee] = await db
+      .update(eventAttendees)
+      .set({ status })
+      .where(
+        and(
+          eq(eventAttendees.eventId, eventId),
+          eq(eventAttendees.userId, userId)
+        )
+      )
+      .returning();
+    return updatedAttendee || undefined;
+  }
+
+  async getEventAttendees(eventId: number): Promise<EventAttendee[]> {
+    return await db
+      .select()
+      .from(eventAttendees)
+      .where(eq(eventAttendees.eventId, eventId));
+  }
+
+  async getUserEventStatus(eventId: number, userId: number): Promise<string | undefined> {
+    const [attendee] = await db
+      .select()
+      .from(eventAttendees)
+      .where(
+        and(
+          eq(eventAttendees.eventId, eventId),
+          eq(eventAttendees.userId, userId)
+        )
+      );
+    return attendee?.status;
+  }
+}
+
+// Comment out the MemStorage instance and use DatabaseStorage instead
+// export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

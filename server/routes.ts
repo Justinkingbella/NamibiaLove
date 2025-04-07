@@ -12,7 +12,8 @@ import {
   insertFollowSchema,
   insertStorySchema,
   insertDateBookingSchema,
-  insertEventAttendeeSchema
+  insertEventAttendeeSchema,
+  insertEventSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { ZodError } from "zod";
@@ -867,8 +868,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const createdBy = req.session.userId as number;
       
-      const eventData = req.body;
-      eventData.createdBy = createdBy;
+      // Parse and format the date properly for the database
+      const eventData = insertEventSchema.parse({
+        ...req.body,
+        createdBy,
+        date: new Date(req.body.date)
+      });
       
       const savedEvent = await storage.createEvent(eventData);
       res.status(201).json(savedEvent);

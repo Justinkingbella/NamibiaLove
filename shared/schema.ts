@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // User table
 export const users = pgTable("users", {
@@ -205,6 +206,127 @@ export type DateBooking = typeof dateBookings.$inferSelect;
 
 export type InsertEventAttendee = z.infer<typeof insertEventAttendeeSchema>;
 export type EventAttendee = typeof eventAttendees.$inferSelect;
+
+// Define relations
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+  stories: many(stories),
+  sentMessages: many(messages, { relationName: "sender" }),
+  receivedMessages: many(messages, { relationName: "receiver" }),
+  comments: many(comments),
+  likes: many(likes),
+  followedBy: many(follows, { relationName: "followers" }),
+  following: many(follows, { relationName: "following" }),
+  createdEvents: many(events),
+  eventAttendees: many(eventAttendees),
+  sentDateRequests: many(dateBookings, { relationName: "requester" }),
+  receivedDateRequests: many(dateBookings, { relationName: "recipient" }),
+}));
+
+export const matchesRelations = relations(matches, ({ one }) => ({
+  user1: one(users, {
+    fields: [matches.userId1],
+    references: [users.id],
+  }),
+  user2: one(users, {
+    fields: [matches.userId2],
+    references: [users.id],
+  }),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+  }),
+  receiver: one(users, {
+    fields: [messages.receiverId],
+    references: [users.id],
+  }),
+}));
+
+export const storiesRelations = relations(stories, ({ one }) => ({
+  user: one(users, {
+    fields: [stories.userId],
+    references: [users.id],
+  }),
+}));
+
+export const postsRelations = relations(posts, ({ one, many }) => ({
+  user: one(users, {
+    fields: [posts.userId],
+    references: [users.id],
+  }),
+  comments: many(comments),
+  likes: many(likes),
+}));
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  post: one(posts, {
+    fields: [comments.postId],
+    references: [posts.id],
+  }),
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const likesRelations = relations(likes, ({ one }) => ({
+  post: one(posts, {
+    fields: [likes.postId],
+    references: [posts.id],
+  }),
+  user: one(users, {
+    fields: [likes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const followsRelations = relations(follows, ({ one }) => ({
+  follower: one(users, {
+    fields: [follows.followerId],
+    references: [users.id],
+    relationName: "followers",
+  }),
+  following: one(users, {
+    fields: [follows.followingId],
+    references: [users.id],
+    relationName: "following",
+  }),
+}));
+
+export const eventsRelations = relations(events, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [events.createdBy],
+    references: [users.id],
+  }),
+  attendees: many(eventAttendees),
+}));
+
+export const dateBookingsRelations = relations(dateBookings, ({ one }) => ({
+  requester: one(users, {
+    fields: [dateBookings.requesterId],
+    references: [users.id],
+    relationName: "requester",
+  }),
+  recipient: one(users, {
+    fields: [dateBookings.recipientId],
+    references: [users.id],
+    relationName: "recipient",
+  }),
+}));
+
+export const eventAttendeesRelations = relations(eventAttendees, ({ one }) => ({
+  event: one(events, {
+    fields: [eventAttendees.eventId],
+    references: [events.id],
+  }),
+  user: one(users, {
+    fields: [eventAttendees.userId],
+    references: [users.id],
+  }),
+}));
 
 // Validation schemas
 export const loginSchema = z.object({
