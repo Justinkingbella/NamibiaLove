@@ -3,6 +3,9 @@ import { Mic, Smile, Send, Paperclip, Loader2, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface MessageInputProps {
   value: string;
@@ -52,13 +55,27 @@ const MessageInput: React.FC<MessageInputProps> = ({
               }}
               disabled={disabled}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 h-7 w-7 rounded-full"
-            >
-              <Smile className="h-5 w-5 text-gray-400" />
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 h-7 w-7 rounded-full"
+                >
+                  <Smile className="h-5 w-5 text-gray-400" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Picker 
+                  data={data} 
+                  onEmojiSelect={(emoji: any) => onChange(value + emoji.native)}
+                  theme="light"
+                  emojiSize={20}
+                  emojiButtonSize={28}
+                  maxFrequentRows={2}
+                />
+              </PopoverContent>
+            </Popover>
             
             <Button
               variant="ghost"

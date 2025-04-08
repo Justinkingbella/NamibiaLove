@@ -56,7 +56,8 @@ const ChatDetail: React.FC = () => {
   } = useQuery<Message[]>({
     queryKey: [API_ENDPOINTS.MESSAGES.GET_WITH_USER(otherUserId || 0)],
     enabled: !!otherUserId,
-    staleTime: 0, // Always refetch messages
+    staleTime: 0,
+    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   // WebSocket for real-time chat
