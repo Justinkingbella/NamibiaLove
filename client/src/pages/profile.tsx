@@ -387,37 +387,56 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
         </TabsContent>
         
         <TabsContent value="about" className="mt-4 px-4">
-          <div className="space-y-6">
-            <UserInfo user={profileUser} isCurrentUser={isCurrentUser} />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <SecretLover isCurrentUser={isCurrentUser} />
-              <GiftArea isCurrentUser={isCurrentUser} userId={profileUser.id} />
+          <div className="grid gap-4 p-4 max-w-5xl mx-auto">
+            {/* About Me Section */}
+            <div className="col-span-full">
+              <UserInfo user={profileUser} isCurrentUser={isCurrentUser} />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Avatar3D 
+            {/* Secret Crush and Gifts Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-br from-pink-50/80 to-purple-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
+                <SecretLover isCurrentUser={isCurrentUser} />
+              </div>
+              <div className="bg-gradient-to-br from-purple-50/80 to-pink-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
+                <GiftArea isCurrentUser={isCurrentUser} userId={profileUser.id} />
+              </div>
+            </div>
+            
+            {/* Avatar and Message Settings Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-br from-indigo-50/80 to-cyan-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
+                <Avatar3D 
+                  isCurrentUser={isCurrentUser} 
+                  avatarData={profileUser.avatarData} 
+                />
+              </div>
+              <div className="bg-gradient-to-br from-cyan-50/80 to-indigo-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
+                <MessageSettings isCurrentUser={isCurrentUser} />
+              </div>
+            </div>
+            
+            {/* Nickname Manager - Full Width */}
+            <div className="col-span-full bg-gradient-to-r from-yellow-50/80 to-orange-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
+              <NicknameManager 
                 isCurrentUser={isCurrentUser} 
-                avatarData={profileUser.avatarData} 
+                targetUser={{
+                  id: profileUser.id,
+                  fullName: profileUser.fullName,
+                  username: profileUser.username
+                }}
+                initialNickname="Sweetheart" 
               />
-              <MessageSettings isCurrentUser={isCurrentUser} />
             </div>
             
-            <NicknameManager 
-              isCurrentUser={isCurrentUser} 
-              targetUser={{
-                id: profileUser.id,
-                fullName: profileUser.fullName,
-                username: profileUser.username
-              }}
-              initialNickname="Sweetheart" 
-            />
-            
-            <SubscriptionStatus 
-              isCurrentUser={isCurrentUser} 
-              isPremium={profileUser.isPremium || false} 
-              expiresAt={profileUser.premiumExpiresAt ? new Date(profileUser.premiumExpiresAt) : undefined} 
-            />
+            {/* Subscription Status - Full Width */}
+            <div className="col-span-full bg-gradient-to-r from-emerald-50/80 to-teal-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
+              <SubscriptionStatus 
+                isCurrentUser={isCurrentUser} 
+                isPremium={profileUser.isPremium || false} 
+                expiresAt={profileUser.premiumExpiresAt ? new Date(profileUser.premiumExpiresAt) : undefined} 
+              />
+            </div>
           </div>
         </TabsContent>
       </Tabs>
