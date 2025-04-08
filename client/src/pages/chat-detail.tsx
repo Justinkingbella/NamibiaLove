@@ -165,7 +165,7 @@ const ChatDetail: React.FC = () => {
           onClose={() => setShowVideoChat(false)} 
         />
       )}
-    <MainLayout hideBottomNav>
+      <MainLayout hideBottomNav>
       <div className="app-container flex flex-col h-[100dvh] overflow-hidden">
         <header className="bg-white px-3 py-2 sticky top-0 z-10 shadow-md border-b border-gray-100">
           <div className="flex items-center">
