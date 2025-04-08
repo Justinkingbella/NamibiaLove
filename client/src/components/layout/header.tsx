@@ -33,18 +33,6 @@ const Header: React.FC = () => {
           <h1 className="text-2xl font-bold text-primary font-sans">{APP_NAME}</h1>
         </Link>
         <div className="flex items-center space-x-4">
-          <Button 
-            variant={isPremium ? "default" : "outline"} 
-            size="sm" 
-            className={isPremium ? "bg-gradient-to-r from-yellow-500 to-orange-400 text-white" : ""}
-            asChild
-          >
-            <Link href="/subscribe">
-              <Crown className="h-4 w-4 mr-1" />
-              {isPremium ? "Premium" : "Upgrade"}
-            </Link>
-          </Button>
-          
           <Button variant="ghost" size="icon" aria-label="Search" asChild>
             <Link href="/discover">
               <Search className="h-5 w-5 text-gray-600" />
