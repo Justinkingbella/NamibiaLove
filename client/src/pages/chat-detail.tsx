@@ -38,7 +38,7 @@ const ChatDetail: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
-  
+
   const otherUserId = match ? parseInt(params.id) : null;
 
   // Get the other user's details
@@ -73,17 +73,17 @@ const ChatDetail: React.FC = () => {
         markMessagesAsRead(otherUserId || 0);
       } else if (data.type === 'typing' && data.senderId === otherUserId) {
         setIsTyping(true);
-        
+
         // Clear previous timeout
         if (typingTimeout) {
           clearTimeout(typingTimeout);
         }
-        
+
         // Set new timeout to clear typing indicator after 3 seconds
         const timeout = setTimeout(() => {
           setIsTyping(false);
         }, 3000);
-        
+
         setTypingTimeout(timeout);
       }
     },
@@ -98,10 +98,10 @@ const ChatDetail: React.FC = () => {
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       if (!otherUserId) throw new Error('No recipient selected');
-      
+
       // Try to send via WebSocket first
       const sentViaWs = sendChatMessage(otherUserId, content);
-      
+
       // If WebSocket fails, send via REST API
       if (!sentViaWs) {
         await apiRequest('POST', API_ENDPOINTS.MESSAGES.CREATE, {
@@ -109,7 +109,7 @@ const ChatDetail: React.FC = () => {
           content,
         });
       }
-      
+
       return { content, receiverId: otherUserId };
     },
     onSuccess: () => {
@@ -169,14 +169,14 @@ const ChatDetail: React.FC = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            
+
             <Link href={`/profile/${otherUser.id}`}>
               <div className="flex items-center ml-2">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
                   <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
                 </Avatar>
-                
+
                 <div className="ml-2">
                   <h3 className="font-semibold text-gray-900 text-sm">{otherUser.fullName}</h3>
                   <div className="flex items-center text-xs">
@@ -192,7 +192,7 @@ const ChatDetail: React.FC = () => {
                 </div>
               </div>
             </Link>
-            
+
             <div className="ml-auto flex items-center gap-1">
               <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 text-primary">
                 <Phone className="h-4 w-4" />
@@ -203,7 +203,7 @@ const ChatDetail: React.FC = () => {
             </div>
           </div>
         </header>
-        
+
         <div className="bg-[#FAF7F2] flex-1 overflow-hidden">
           <div 
             ref={chatContainerRef}
@@ -226,7 +226,7 @@ const ChatDetail: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     {messages.map((message) => (
                       <ChatMessage
                         key={message.id}
@@ -235,7 +235,7 @@ const ChatDetail: React.FC = () => {
                         isCurrentUser={message.senderId === user?.id}
                       />
                     ))}
-                    
+
                     {isTyping && (
                       <div className="flex mb-0">
                         <Avatar className="w-8 h-8 mr-2 self-end">
@@ -269,7 +269,7 @@ const ChatDetail: React.FC = () => {
             )}
           </div>
         </div>
-        
+
         <MessageInput
           value={newMessage}
           onChange={handleInputChange}

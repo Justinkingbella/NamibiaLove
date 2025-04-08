@@ -29,27 +29,27 @@ export function useWebSocket(userId: number | null, options: UseWebSocketOptions
   // Establish connection
   const connect = useCallback(() => {
     if (!userId) return;
-    
+
     setStatus('connecting');
-    
+
     // Create WebSocket connection
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     const socket = new WebSocket(wsUrl);
-    
+
     socket.onopen = () => {
       setStatus('open');
       setReconnectAttempts(0);
-      
+
       // Authenticate socket with userId
       socket.send(JSON.stringify({
         type: 'authenticate',
         userId
       }));
-      
+
       if (onOpen) onOpen();
     };
-    
+
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -58,12 +58,12 @@ export function useWebSocket(userId: number | null, options: UseWebSocketOptions
         console.error('Failed to parse WebSocket message', error);
       }
     };
-    
+
     socket.onclose = () => {
       setStatus('closed');
-      
+
       if (onClose) onClose();
-      
+
       if (autoReconnect && reconnectAttempts < maxReconnectAttempts) {
         setTimeout(() => {
           setReconnectAttempts(prev => prev + 1);
@@ -71,15 +71,15 @@ export function useWebSocket(userId: number | null, options: UseWebSocketOptions
         }, reconnectInterval);
       }
     };
-    
+
     socket.onerror = (error) => {
       setStatus('error');
       if (onError) onError(error);
       socket.close();
     };
-    
+
     socketRef.current = socket;
-    
+
     // Clean up on unmount
     return () => {
       if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -100,7 +100,7 @@ export function useWebSocket(userId: number | null, options: UseWebSocketOptions
 
   useEffect(() => {
     connect();
-    
+
     return () => {
       if (socketRef.current) {
         socketRef.current.close();
@@ -143,6 +143,15 @@ export function useWebSocket(userId: number | null, options: UseWebSocketOptions
     });
   }, [sendMessage]);
 
+  const sendSignal = useCallback((receiverId: number, signal: any) => {
+    return sendMessage({
+      type: 'signal',
+      receiverId,
+      signal
+    });
+  }, [sendMessage]);
+
+
   return {
     status,
     sendMessage,
@@ -150,6 +159,7 @@ export function useWebSocket(userId: number | null, options: UseWebSocketOptions
     sendChatMessage,
     markMessagesAsRead,
     reconnect: connect,
-    reconnectAttempts
+    reconnectAttempts,
+    sendSignal
   };
 }
