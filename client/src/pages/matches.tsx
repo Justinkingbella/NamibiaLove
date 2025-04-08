@@ -40,15 +40,32 @@ const MatchesPage: React.FC = () => {
   });
 
   // Fetch potential matches
-  const { data: potentialMatches, isLoading: matchesLoading } = useQuery<User[]>({
+  const { data: allUsers, isLoading: matchesLoading } = useQuery<User[]>({
     queryKey: ['potential-matches'],
     queryFn: async () => {
-      const response = await apiRequest('GET', API_ENDPOINTS.USERS.LIST);
-      // Filter out the current user and users that are already matched
-      return Array.isArray(response) ? response.filter((u: User) => u.id !== user?.id) : [];
+      const [usersResponse, matchesResponse] = await Promise.all([
+        apiRequest('GET', API_ENDPOINTS.USERS.LIST),
+        apiRequest('GET', API_ENDPOINTS.MATCHES.LIST)
+      ]);
+
+      // Get already matched/liked user IDs
+      const matchedUserIds = new Set(
+        Array.isArray(matchesResponse) ? 
+          matchesResponse.map(match => 
+            match.userId1 === user?.id ? match.userId2 : match.userId1
+          ) : []
+      );
+
+      // Filter out current user and already matched users
+      return Array.isArray(usersResponse) ? 
+        usersResponse.filter((u: User) => 
+          u.id !== user?.id && !matchedUserIds.has(u.id)
+        ) : [];
     },
     enabled: !!user,
   });
+
+  const potentialMatches = allUsers;
 
   // Create match mutation
   const createMatchMutation = useMutation({
