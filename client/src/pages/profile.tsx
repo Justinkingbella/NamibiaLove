@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { useRoute, Link } from 'wouter';
 import MainLayout from '@/components/layout/main-layout';
 import UserInfo from '@/components/profile/user-info';
+import SecretLover from '@/components/profile/secret-lover';
+import GiftArea from '@/components/profile/gift-area';
+import Avatar3D from '@/components/profile/avatar-3d';
+import MessageSettings from '@/components/profile/message-settings';
+import NicknameManager from '@/components/profile/nickname-manager';
+import SubscriptionStatus from '@/components/profile/subscription-status';
 import PostCard from '@/components/posts/post-card';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { API_ENDPOINTS } from '@/lib/constants';
@@ -27,6 +33,9 @@ interface User {
   profilePicture?: string;
   interests?: string[];
   email: string;
+  avatarData?: any;
+  isPremium?: boolean;
+  premiumExpiresAt?: string;
 }
 
 interface Post {
@@ -150,8 +159,9 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
 
   return (
     <MainLayout>
-      <div className="bg-gradient-to-r from-yellow-500 to-orange-400 h-32 relative">
-        <div className="absolute top-4 left-4 right-4 flex justify-between">
+      {/* Navigation header */}
+      <div className="bg-gradient-to-r from-indigo-600 to-violet-500 py-4 px-4 relative">
+        <div className="flex justify-between items-center">
           <Link href="/">
             <Button variant="ghost" size="icon" className="bg-white/20 text-white hover:bg-white/30">
               <ArrowLeft className="h-5 w-5" />
@@ -191,70 +201,93 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
         </div>
       </div>
       
-      <div className="px-4 -mt-16 mb-6">
-        <div className="text-center">
-          <Avatar className="h-32 w-32 mx-auto border-4 border-white">
-            <AvatarImage 
-              src={profileUser.profilePicture} 
-              alt={profileUser.fullName} 
-              className="object-cover"
-            />
-            <AvatarFallback className="text-3xl">
-              {getInitials(profileUser.fullName)}
-            </AvatarFallback>
-          </Avatar>
-          
-          <h1 className="text-2xl font-bold mt-4 font-sans">{profileUser.fullName}</h1>
-          
-          <div className="text-gray-600 text-sm mt-1 flex items-center justify-center">
-            @{profileUser.username}
-            {profileUser.location && (
-              <span className="mx-1">•</span>
-            )}
-            {profileUser.location}
-          </div>
-          
-          {profileUser.bio && (
-            <p className="mt-3 text-gray-700 max-w-md mx-auto">{profileUser.bio}</p>
-          )}
-          
-          {!isCurrentUser && (
-            <div className="mt-4">
+      <div className="px-4 py-6 bg-[#F8F5F0]">
+        {/* Profile header with avatar and basic info */}
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+          <div className="relative">
+            <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
+              <AvatarImage 
+                src={profileUser.profilePicture} 
+                alt={profileUser.fullName} 
+                className="object-cover"
+              />
+              <AvatarFallback className="text-3xl bg-gradient-to-r from-indigo-200 to-purple-200 text-indigo-700">
+                {getInitials(profileUser.fullName)}
+              </AvatarFallback>
+            </Avatar>
+            
+            {isCurrentUser && (
               <Button 
-                variant={followStatus?.following ? "outline" : "default"}
-                className={followStatus?.following ? "bg-gray-100 hover:bg-gray-200 text-gray-800" : "bg-gradient-to-r from-yellow-500 to-orange-400 text-white"}
-                onClick={handleFollowToggle}
-                disabled={followStatusLoading || followMutation.isPending}
+                size="icon" 
+                variant="outline" 
+                className="absolute -bottom-2 -right-2 h-10 w-10 rounded-full bg-white hover:bg-gray-100"
+                onClick={() => {
+                  alert('Upload photo feature coming soon!');
+                }}
               >
-                {followMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    {followStatus?.following ? (
-                      <UserMinus className="mr-2 h-4 w-4" />
-                    ) : (
-                      <UserPlus className="mr-2 h-4 w-4" />
-                    )}
-                  </>
-                )}
-                {followStatus?.following ? "Following" : "Follow"}
+                <Edit className="h-4 w-4" />
               </Button>
+            )}
+          </div>
+          
+          <div className="flex-1 text-center md:text-left">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-2xl font-bold font-sans text-gray-800">{profileUser.fullName}</h1>
+                <div className="text-gray-600 text-sm mt-1 flex items-center justify-center md:justify-start">
+                  @{profileUser.username}
+                  {profileUser.location && (
+                    <>
+                      <span className="mx-1">•</span>
+                      {profileUser.location}
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {!isCurrentUser && (
+                <div className="mt-4 md:mt-0">
+                  <Button 
+                    variant={followStatus?.following ? "outline" : "default"}
+                    className={followStatus?.following ? "bg-white hover:bg-gray-100 text-gray-800" : "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"}
+                    onClick={handleFollowToggle}
+                    disabled={followStatusLoading || followMutation.isPending}
+                  >
+                    {followMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        {followStatus?.following ? (
+                          <UserMinus className="mr-2 h-4 w-4" />
+                        ) : (
+                          <UserPlus className="mr-2 h-4 w-4" />
+                        )}
+                      </>
+                    )}
+                    {followStatus?.following ? "Following" : "Follow"}
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        
-        <div className="flex justify-center space-x-6 mt-6">
-          <div className="text-center">
-            <div className="font-bold">120</div>
-            <div className="text-sm text-gray-500">Posts</div>
-          </div>
-          <div className="text-center">
-            <div className="font-bold">856</div>
-            <div className="text-sm text-gray-500">Followers</div>
-          </div>
-          <div className="text-center">
-            <div className="font-bold">267</div>
-            <div className="text-sm text-gray-500">Following</div>
+            
+            {profileUser.bio && (
+              <p className="mt-3 text-gray-600 max-w-md">{profileUser.bio}</p>
+            )}
+            
+            <div className="flex justify-center md:justify-start space-x-8 mt-4">
+              <div className="text-center">
+                <div className="font-bold text-gray-800">120</div>
+                <div className="text-xs text-gray-500">Posts</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-gray-800">856</div>
+                <div className="text-xs text-gray-500">Followers</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-gray-800">267</div>
+                <div className="text-xs text-gray-500">Following</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -265,19 +298,22 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
             value="posts"
             className="flex-1 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
           >
-            <Grid3X3 className="h-5 w-5" />
+            <Grid3X3 className="h-5 w-5 mr-2" />
+            <span className="hidden sm:inline">Posts</span>
           </TabsTrigger>
           <TabsTrigger 
             value="saved"
             className="flex-1 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
           >
-            <BookmarkIcon className="h-5 w-5" />
+            <BookmarkIcon className="h-5 w-5 mr-2" />
+            <span className="hidden sm:inline">Saved</span>
           </TabsTrigger>
           <TabsTrigger 
             value="about"
             className="flex-1 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
           >
-            <UserIcon className="h-5 w-5" />
+            <UserIcon className="h-5 w-5 mr-2" />
+            <span className="hidden sm:inline">About</span>
           </TabsTrigger>
         </TabsList>
         
@@ -320,7 +356,38 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
         </TabsContent>
         
         <TabsContent value="about" className="mt-4 px-4">
-          <UserInfo user={profileUser} />
+          <div className="space-y-6">
+            <UserInfo user={profileUser} isCurrentUser={isCurrentUser} />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <SecretLover isCurrentUser={isCurrentUser} />
+              <GiftArea isCurrentUser={isCurrentUser} userId={profileUser.id} />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Avatar3D 
+                isCurrentUser={isCurrentUser} 
+                avatarData={profileUser.avatarData} 
+              />
+              <MessageSettings isCurrentUser={isCurrentUser} />
+            </div>
+            
+            <NicknameManager 
+              isCurrentUser={isCurrentUser} 
+              targetUser={{
+                id: profileUser.id,
+                fullName: profileUser.fullName,
+                username: profileUser.username
+              }}
+              initialNickname="Sweetheart" 
+            />
+            
+            <SubscriptionStatus 
+              isCurrentUser={isCurrentUser} 
+              isPremium={profileUser.isPremium || false} 
+              expiresAt={profileUser.premiumExpiresAt ? new Date(profileUser.premiumExpiresAt) : undefined} 
+            />
+          </div>
         </TabsContent>
       </Tabs>
       
