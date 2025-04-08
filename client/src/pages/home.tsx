@@ -32,59 +32,6 @@ interface Post {
   userLiked: boolean;
 }
 
-const CreatePost = () => {
-  const [content, setContent] = useState('');
-  const [mediaUrl, setMediaUrl] = useState('');
-  const { user } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Placeholder for API call to create a post
-    try {
-      const response = await fetch('/api/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content, mediaUrl, userId: user?.id }),
-      });
-      if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      // Handle successful post creation
-      setContent('');
-      setMediaUrl('');
-      console.log('Post created successfully');
-    } catch (error) {
-      console.error('Error creating post:', error);
-      // Handle error appropriately (e.g., show error message)
-    }
-
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="mb-6">
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="What's on your mind?"
-        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-      />
-      <input
-        type="text"
-        value={mediaUrl}
-        onChange={(e) => setMediaUrl(e.target.value)}
-        placeholder="Media URL (optional)"
-        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-      />
-      <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
-        Create Post
-      </button>
-    </form>
-  );
-};
-
-
 const Home: React.FC = () => {
   const { user } = useAuth();
   const [matchedUser, setMatchedUser] = useState<User | null>(null);
@@ -173,9 +120,7 @@ const Home: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold font-sans">Latest Posts</h2>
               </div>
-
-              <CreatePost /> {/* Added CreatePost component */}
-
+              
               {postsLoading ? (
                 <div className="flex justify-center p-6">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -185,7 +130,7 @@ const Home: React.FC = () => {
                   {posts?.map(post => (
                     <PostCard key={post.id} post={post} />
                   ))}
-
+                  
                   {!posts?.length && (
                     <div className="text-center p-6 text-gray-500">
                       No posts yet. Follow people to see their posts here!
@@ -202,13 +147,13 @@ const Home: React.FC = () => {
               Switch to the Discover tab to explore more people
             </div>
           </TabsContent>
-
+          
           <TabsContent value="nearby">
             <div className="p-6 text-center text-gray-500">
               Find people near you in the Nearby tab
             </div>
           </TabsContent>
-
+          
           <TabsContent value="matches">
             <div className="p-6 text-center text-gray-500">
               Your matches will appear here
