@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useAuth } from '@/hooks/use-auth';
 import { Link } from 'wouter';
-import { Loader2, Search, Filter, MapPin, Briefcase } from 'lucide-react';
+import { Loader2, Search, Filter, MapPin, Briefcase, Heart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -38,53 +38,38 @@ const Discover: React.FC = () => {
   const [filterLocation, setFilterLocation] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch users
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: [API_ENDPOINTS.USERS.LIST],
-    staleTime: 60000, // 1 minute
+    staleTime: 60000,
   });
 
-  // Filter out current user
   const otherUsers = users?.filter(u => u.id !== user?.id) || [];
 
-  // Apply filters
   const filteredUsers = otherUsers.filter(u => {
-    // Search by name
     const matchesSearch = u.fullName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Filter by age
     const matchesAge = !filterAge || 
       (u.age !== undefined && 
         ((filterAge === '18-25' && u.age >= 18 && u.age <= 25) ||
          (filterAge === '26-35' && u.age >= 26 && u.age <= 35) ||
          (filterAge === '36-45' && u.age >= 36 && u.age <= 45) ||
          (filterAge === '46+' && u.age >= 46)));
-    
-    // Filter by gender
     const matchesGender = !filterGender || u.gender === filterGender;
-    
-    // Filter by location
     const matchesLocation = !filterLocation || 
       (u.location && u.location.toLowerCase().includes(filterLocation.toLowerCase()));
-    
+
     return matchesSearch && matchesAge && matchesGender && matchesLocation;
   });
 
-  const toggleFilters = () => {
-    setShowFilters(!showFilters);
-  };
-
-  const clearFilters = () => {
-    setFilterAge('');
-    setFilterGender('');
-    setFilterLocation('');
-  };
-
   return (
     <MainLayout>
-      <div className="p-4">
-        <div className="mb-4">
-          <div className="flex items-center gap-2">
+      <div className="p-4 bg-gray-50 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover</h1>
+            <p className="text-gray-500">Find your perfect match</p>
+          </div>
+
+          <div className="flex gap-2 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -95,163 +80,131 @@ const Discover: React.FC = () => {
               />
             </div>
             <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={toggleFilters}
-              className={showFilters ? "bg-primary/10 text-primary" : ""}
+              variant={showFilters ? "secondary" : "outline"}
+              onClick={() => setShowFilters(!showFilters)}
             >
-              <Filter className="h-4 w-4" />
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
             </Button>
           </div>
 
-          {/* Filters */}
           {showFilters && (
             <motion.div 
-              className="mt-3 p-3 border rounded-md bg-gray-50"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-white p-4 rounded-xl shadow-sm"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Age Range</label>
-                  <Select value={filterAge} onValueChange={setFilterAge}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Any age" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Any age</SelectItem>
-                      <SelectItem value="18-25">18-25</SelectItem>
-                      <SelectItem value="26-35">26-35</SelectItem>
-                      <SelectItem value="36-45">36-45</SelectItem>
-                      <SelectItem value="46+">46+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Gender</label>
-                  <Select value={filterGender} onValueChange={setFilterGender}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Any gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Any gender</SelectItem>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="mb-3">
-                <label className="text-xs text-gray-500 mb-1 block">Location</label>
-                <Select value={filterLocation} onValueChange={setFilterLocation}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Any location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Any location</SelectItem>
-                    <SelectItem value="Windhoek">Windhoek</SelectItem>
-                    <SelectItem value="Swakopmund">Swakopmund</SelectItem>
-                    <SelectItem value="Walvis Bay">Walvis Bay</SelectItem>
-                    <SelectItem value="Otjiwarongo">Otjiwarongo</SelectItem>
-                    <SelectItem value="Oshakati">Oshakati</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end">
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Clear Filters
-                </Button>
-              </div>
+              <Select value={filterAge} onValueChange={setFilterAge}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Age Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Any age</SelectItem>
+                  <SelectItem value="18-25">18-25</SelectItem>
+                  <SelectItem value="26-35">26-35</SelectItem>
+                  <SelectItem value="36-45">36-45</SelectItem>
+                  <SelectItem value="46+">46+</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterGender} onValueChange={setFilterGender}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Any gender</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterLocation} onValueChange={setFilterLocation}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Any location</SelectItem>
+                  <SelectItem value="Windhoek">Windhoek</SelectItem>
+                  <SelectItem value="Swakopmund">Swakopmund</SelectItem>
+                  <SelectItem value="Walvis Bay">Walvis Bay</SelectItem>
+                  <SelectItem value="Otjiwarongo">Otjiwarongo</SelectItem>
+                  <SelectItem value="Oshakati">Oshakati</SelectItem>
+                </SelectContent>
+              </Select>
             </motion.div>
           )}
-        </div>
 
-        {isLoading ? (
-          <div className="flex justify-center p-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
-            {filteredUsers.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredUsers.map(user => (
-                  <Link href={`/profile/${user.id}`} key={user.id}>
-                    <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
-                      <div className="h-40 overflow-hidden">
+          {isLoading ? (
+            <div className="flex justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
+              {filteredUsers.map((user, index) => (
+                <Link href={`/profile/${user.id}`} key={user.id}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`group cursor-pointer ${
+                      index === 0 ? 'md:col-span-2 md:row-span-2' : ''
+                    }`}
+                  >
+                    <Card className="overflow-hidden h-full hover:shadow-xl transition-all duration-300 bg-white">
+                      <div className={`relative ${index === 0 ? 'h-96' : 'h-64'}`}>
                         <img 
                           src={user.profilePicture || "https://images.unsplash.com/photo-1518399681705-1c1a55e5e883?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8bmFtaWJpYXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=800&q=60"} 
-                          alt={`${user.fullName}'s profile cover`}
-                          className="w-full h-full object-cover"
+                          alt={user.fullName}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
-                      </div>
-                      <CardContent className="p-4">
-                        <div className="flex">
-                          <div className="-mt-12 mr-4">
-                            <Avatar className="h-16 w-16 border-4 border-white shadow-md">
-                              <AvatarImage 
-                                src={user.profilePicture} 
-                                alt={user.fullName} 
-                              />
-                              <AvatarFallback className="text-lg font-medium">
-                                {getInitials(user.fullName)}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                          <div className="flex-1 pt-1">
-                            <h3 className="font-semibold text-lg">
-                              {user.fullName}{user.age ? `, ${user.age}` : ''}
-                            </h3>
-                            
-                            <div className="flex flex-col gap-1 mt-2 text-sm text-gray-600">
-                              {user.location && (
-                                <div className="flex items-center gap-1">
-                                  <MapPin size={14} />
-                                  <span>{user.location}</span>
-                                </div>
-                              )}
-                              
-                              {user.occupation && (
-                                <div className="flex items-center gap-1">
-                                  <Briefcase size={14} />
-                                  <span>{user.occupation}</span>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {user.interests && user.interests.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-3">
-                                {user.interests.slice(0, 3).map((interest, i) => (
-                                  <span 
-                                    key={i} 
-                                    className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs"
-                                  >
-                                    {interest}
-                                  </span>
-                                ))}
-                                {user.interests.length > 3 && (
-                                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-                                    +{user.interests.length - 3}
-                                  </span>
-                                )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                          <h3 className="text-xl font-semibold mb-1">
+                            {user.fullName}{user.age ? `, ${user.age}` : ''}
+                          </h3>
+                          <div className="flex items-center gap-3 text-sm">
+                            {user.location && (
+                              <div className="flex items-center gap-1">
+                                <MapPin size={14} />
+                                <span>{user.location}</span>
+                              </div>
+                            )}
+                            {user.occupation && (
+                              <div className="flex items-center gap-1">
+                                <Briefcase size={14} />
+                                <span>{user.occupation}</span>
                               </div>
                             )}
                           </div>
                         </div>
-                      </CardContent>
+                      </div>
+                      {user.interests && user.interests.length > 0 && (
+                        <CardContent className="p-4">
+                          <div className="flex flex-wrap gap-2">
+                            {user.interests.slice(0, 3).map((interest, i) => (
+                              <span 
+                                key={i} 
+                                className="px-3 py-1 bg-primary/5 text-primary rounded-full text-xs font-medium"
+                              >
+                                {interest}
+                              </span>
+                            ))}
+                            {user.interests.length > 3 && (
+                              <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+                                +{user.interests.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        </CardContent>
+                      )}
                     </Card>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center p-8 text-gray-500">
-                No users found matching your criteria
-              </div>
-            )}
-          </>
-        )}
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </MainLayout>
   );
