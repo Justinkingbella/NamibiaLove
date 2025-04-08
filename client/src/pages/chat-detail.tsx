@@ -158,7 +158,7 @@ const ChatDetail: React.FC = () => {
   return (
     <MainLayout hideBottomNav>
       <div className="app-container flex flex-col h-[100dvh] overflow-hidden">
-        <header className="bg-white px-3 py-2 sticky top-0 z-10 shadow-sm border-b border-gray-100">
+        <header className="bg-white px-3 py-2 sticky top-0 z-10 shadow-md border-b border-gray-100">
           <div className="flex items-center">
             <Button 
               variant="ghost" 
@@ -203,7 +203,7 @@ const ChatDetail: React.FC = () => {
           </div>
         </header>
         
-        <div className="bg-gray-50 flex-1 overflow-hidden">
+        <div className="bg-[#FAF7F2] flex-1 overflow-hidden">
           <div 
             ref={chatContainerRef}
             className="p-4 h-full overflow-y-auto pb-0"
@@ -217,7 +217,7 @@ const ChatDetail: React.FC = () => {
                 {messages && messages.length > 0 ? (
                   <div className="space-y-3">
                     <div className="flex justify-center">
-                      <div className="text-xs font-medium text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm my-3">
+                      <div className="text-xs font-medium text-gray-500 bg-[#F8F5F0] px-3 py-1 rounded-full shadow-md my-3">
                         {messages[0]?.createdAt ? (
                           `Today, ${formatChatTime(messages[0].createdAt)}`
                         ) : (
@@ -241,7 +241,7 @@ const ChatDetail: React.FC = () => {
                           <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
                           <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
                         </Avatar>
-                        <div className="bg-gray-100 text-gray-800 rounded-full rounded-tl-sm px-4 py-2 shadow-sm inline-flex">
+                        <div className="bg-[#F8F5F0] text-gray-800 rounded-full rounded-tl-sm px-4 py-2 shadow-md inline-flex">
                           <div className="flex space-x-1">
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -253,7 +253,7 @@ const ChatDetail: React.FC = () => {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
+                    <div className="text-center p-8 bg-[#F8F5F0] rounded-3xl shadow-lg">
                       <div className="w-16 h-16 rounded-full bg-primary/10 mx-auto mb-4 flex items-center justify-center">
                         <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                           <div className="w-5 h-5 rounded-full bg-primary"></div>

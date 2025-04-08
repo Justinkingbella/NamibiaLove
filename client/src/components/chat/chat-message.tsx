@@ -27,8 +27,8 @@ interface ChatMessageProps {
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, otherUser, isCurrentUser }) => {
   const bubbleStyles = isCurrentUser 
-    ? "bg-primary text-white rounded-full rounded-tr-sm px-4 py-2.5 shadow-sm"
-    : "bg-gray-100 text-gray-800 rounded-full rounded-tl-sm px-4 py-2.5 shadow-sm";
+    ? "bg-primary text-white rounded-full rounded-tr-sm px-4 py-2.5 shadow-md"
+    : "bg-[#F8F5F0] text-gray-800 rounded-full rounded-tl-sm px-4 py-2.5 shadow-md";
 
   return (
     <motion.div 
