@@ -161,19 +161,54 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
 
   return (
     <MainLayout>
-      {/* Navigation header */}
-      <div className="bg-white/90 backdrop-blur-md py-4 px-4 relative overflow-hidden border-b sticky top-0 z-50 shadow-sm">
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-r from-pink-100/20 to-purple-100/20 blur-xl"></div>
-          <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-gradient-to-r from-purple-100/20 to-pink-100/20 blur-xl"></div>
+      {/* Profile Header */}
+      <div className="relative h-[60vh] bg-gradient-to-br from-orange-400 to-pink-500">
+        <div className="absolute top-4 left-4 z-10">
+          <Button variant="ghost" size="icon" className="bg-white/20 hover:bg-white/30 text-white rounded-xl">
+            <Edit className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="absolute top-4 right-4 z-10">
+          <Button variant="ghost" size="icon" className="bg-white/20 hover:bg-white/30 text-white rounded-xl">
+            <Settings className="h-5 w-5" />
+          </Button>
         </div>
         
-        <div className="flex justify-between items-center relative z-10">
-          <Link href="/">
-            <Button variant="ghost" size="icon" className="bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
+        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <div className="flex items-end space-x-4">
+            <div className="relative">
+              <div className="rounded-3xl overflow-hidden border-4 border-white w-24 h-24">
+                {isCurrentUser ? (
+                  <ProfilePictureUpload
+                    currentImage={profileUser.profilePicture}
+                    username={profileUser.username}
+                    onImageUpdated={(newImageUrl) => {
+                      queryClient.invalidateQueries({ 
+                        queryKey: [API_ENDPOINTS.USERS.DETAIL(userId || 0)] 
+                      });
+                    }}
+                  />
+                ) : (
+                  <Avatar className="w-full h-full">
+                    <AvatarImage 
+                      src={profileUser.profilePicture} 
+                      alt={profileUser.fullName} 
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-2xl bg-gradient-to-r from-orange-200 to-pink-200 text-orange-700">
+                      {getInitials(profileUser.fullName)}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold">{profileUser.fullName}</h1>
+              <p className="text-white/80 text-sm">{profileUser.occupation || 'No occupation set'}</p>
+            </div>
+          </div>
+        </div>
           
           {isCurrentUser ? (
             <div className="flex space-x-2">
@@ -321,15 +356,26 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
         </div>
       </div>
       
-      <Tabs defaultValue="posts">
-        <div className="bg-white border-b border-gray-200 sticky top-14 z-10 shadow-sm">
-          <TabsList className="w-full bg-transparent rounded-none max-w-2xl mx-auto">
+      <div className="bg-white rounded-t-3xl -mt-6 relative z-10">
+        <Tabs defaultValue="posts" className="w-full">
+          <TabsList className="w-full flex justify-between p-2 bg-transparent gap-1">
             <TabsTrigger 
               value="posts"
-              className="flex-1 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-medium rounded-none py-3"
+              className="flex-1 py-3 px-6 rounded-xl data-[state=active]:bg-black data-[state=active]:text-white transition-all"
             >
-              <Grid3X3 className="h-5 w-5 mr-2" />
-              <span className="hidden sm:inline">Posts</span>
+              Posts
+            </TabsTrigger>
+            <TabsTrigger 
+              value="stories"
+              className="flex-1 py-3 px-6 rounded-xl data-[state=active]:bg-black data-[state=active]:text-white transition-all"
+            >
+              Stories
+            </TabsTrigger>
+            <TabsTrigger 
+              value="connections"
+              className="flex-1 py-3 px-6 rounded-xl data-[state=active]:bg-black data-[state=active]:text-white transition-all"
+            >
+              Connections
             </TabsTrigger>
             <TabsTrigger 
               value="saved"
@@ -348,20 +394,32 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
           </TabsList>
         </div>
         
-        <TabsContent value="posts" className="mt-4 px-4">
-          {postsLoading ? (
-            <div className="flex justify-center p-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              {posts && posts.length > 0 ? (
-                <div className="space-y-6">
-                  {posts.map(post => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-                </div>
-              ) : (
+        <div className="px-4 pt-2 pb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">23 Posts</h2>
+            <Button variant="link" className="text-orange-500">
+              View Archives
+            </Button>
+          </div>
+        </div>
+        
+        <TabsContent value="posts" className="px-4">
+          <div className="grid grid-cols-2 gap-2">
+            {posts && posts.length > 0 ? posts.map(post => (
+              <div key={post.id} className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
+                {post.mediaUrl ? (
+                  <img 
+                    src={post.mediaUrl} 
+                    alt={post.content} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <ImageIcon className="h-8 w-8" />
+                  </div>
+                )}
+              </div>
+            )) : (
                 <div className="text-center py-12 text-gray-500">
                   <Grid3X3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   {isCurrentUser ? (
