@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Settings, LogOut, Edit, Heart, Calendar, UserPlus, UserMinus, Loader2, Grid3X3, BookmarkIcon, UserIcon, Crown, ImageIcon } from 'lucide-react';
+import { ArrowLeft, Settings, LogOut, Edit, Heart, Calendar, UserPlus, UserMinus, Loader2, Grid3X3, BookmarkIcon, UserIcon, Crown } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import ModalDialog from '@/components/common/modal';
 
@@ -51,6 +51,8 @@ interface Post {
   userLiked: boolean;
 }
 
+import { RouteComponentProps } from 'wouter';
+
 interface ProfileProps extends RouteComponentProps<{ id?: string }> {
   isCurrentUser?: boolean;
 }
@@ -59,40 +61,45 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
   const [match, useRouteParams] = useRoute<{ id: string }>('/profile/:id');
   const { user: currentUser, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
+  
+  // If no ID is provided, show current user's profile
   const userId = match && useRouteParams.id ? parseInt(useRouteParams.id) : 
     routeParams?.id ? parseInt(routeParams.id) : currentUser?.id;
   const isCurrentUser = propIsCurrentUser !== undefined 
     ? propIsCurrentUser 
     : userId === currentUser?.id;
 
+  // Fetch user data
   const { 
     data: profileUser, 
     isLoading: userLoading 
   } = useQuery<User>({
     queryKey: [API_ENDPOINTS.USERS.DETAIL(userId || 0)],
     enabled: !!userId,
-    staleTime: 60000,
+    staleTime: 60000, // 1 minute
   });
 
+  // Fetch user posts
   const { 
     data: posts, 
     isLoading: postsLoading 
   } = useQuery<Post[]>({
     queryKey: [API_ENDPOINTS.POSTS.GET_BY_USER(userId || 0)],
     enabled: !!userId,
-    staleTime: 30000,
+    staleTime: 30000, // 30 seconds
   });
 
+  // Fetch follow status if viewing another user's profile
   const { 
     data: followStatus, 
     isLoading: followStatusLoading 
   } = useQuery<{ following: boolean }>({
     queryKey: [API_ENDPOINTS.FOLLOWS.CHECK_STATUS(userId || 0)],
     enabled: !!userId && !isCurrentUser,
-    staleTime: 30000,
+    staleTime: 30000, // 30 seconds
   });
 
+  // Toggle follow mutation
   const followMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('POST', API_ENDPOINTS.FOLLOWS.TOGGLE, {
@@ -105,12 +112,14 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
     }
   });
 
+  // Handle follow/unfollow button click
   const handleFollowToggle = () => {
     if (!followStatusLoading && !followMutation.isPending) {
       followMutation.mutate();
     }
   };
 
+  // Handle logout
   const handleLogout = async () => {
     await logout();
     setShowLogoutConfirm(false);
@@ -124,13 +133,13 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
             <Skeleton className="h-10 w-10 rounded-full" />
             <Skeleton className="h-10 w-24" />
           </div>
-
+          
           <div className="text-center mb-6">
             <Skeleton className="h-24 w-24 rounded-full mx-auto mb-4" />
             <Skeleton className="h-6 w-40 mx-auto mb-2" />
             <Skeleton className="h-4 w-60 mx-auto" />
           </div>
-
+          
           <div className="flex justify-center space-x-6 mb-6">
             <div className="text-center">
               <Skeleton className="h-5 w-8 mx-auto mb-1" />
@@ -152,6 +161,7 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
 
   return (
     <MainLayout>
+      {/* Profile Header */}
       <div className="relative h-[60vh] bg-gradient-to-br from-orange-400 to-pink-500">
         <div className="absolute top-4 left-4 z-10">
           <Button variant="ghost" size="icon" className="bg-white/20 hover:bg-white/30 text-white rounded-xl">
@@ -163,7 +173,7 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
             <Settings className="h-5 w-5" />
           </Button>
         </div>
-
+        
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
           <div className="flex items-end space-x-4">
             <div className="relative">
@@ -192,16 +202,49 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
                 )}
               </div>
             </div>
-
+            
             <div className="flex-1">
               <h1 className="text-2xl font-bold">{profileUser.fullName}</h1>
               <p className="text-white/80 text-sm">{profileUser.occupation || 'No occupation set'}</p>
             </div>
           </div>
         </div>
+          
+          {isCurrentUser ? (
+            <div className="flex space-x-2">
+              <Link href="/profile/edit">
+                <Button variant="ghost" size="icon" className="bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
+                  <Edit className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm"
+                onClick={() => setShowLogoutConfirm(true)}
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex space-x-2">
+              <Link href={`/booking/${profileUser.id}`}>
+                <Button variant="ghost" size="icon" className="bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
+                  <Calendar className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href={`/chat/${profileUser.id}`}>
+                <Button variant="ghost" size="icon" className="bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
+                  <Heart className="h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
-
+      
       <div className="px-4 py-6 bg-white relative">
+        {/* Profile header with avatar and basic info */}
         <div className="max-w-md mx-auto">
           <div className="flex flex-col items-center gap-4 relative z-10">
             <div className="relative">
@@ -211,6 +254,7 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
                     currentImage={profileUser.profilePicture}
                     username={profileUser.username}
                     onImageUpdated={(newImageUrl) => {
+                      // Invalidate user query to refresh profile
                       queryClient.invalidateQueries({ 
                         queryKey: [API_ENDPOINTS.USERS.DETAIL(userId || 0)] 
                       });
@@ -231,14 +275,14 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
                   </Avatar>
                 </div>
               )}
-
+              
               {profileUser.isPremium && (
                 <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-full p-1.5">
                   <Crown className="h-5 w-5" />
                 </div>
               )}
             </div>
-
+            
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
@@ -260,7 +304,7 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
                     )}
                   </div>
                 </div>
-
+                
                 {!isCurrentUser && (
                   <div className="mt-4 md:mt-0">
                     <Button 
@@ -288,11 +332,11 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
                   </div>
                 )}
               </div>
-
+              
               {profileUser.bio && (
                 <p className="mt-3 text-gray-600 max-w-md leading-relaxed">{profileUser.bio}</p>
               )}
-
+              
               <div className="grid grid-cols-3 gap-4 w-full mt-5 bg-gray-50 rounded-xl p-4">
                 <div className="text-center">
                   <div className="font-medium text-gray-800">80% OFF</div>
@@ -311,7 +355,7 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
           </div>
         </div>
       </div>
-
+      
       <div className="bg-white rounded-t-3xl -mt-6 relative z-10">
         <Tabs defaultValue="posts" className="w-full">
           <TabsList className="w-full flex justify-between p-2 bg-transparent gap-1">
@@ -333,34 +377,49 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
             >
               Connections
             </TabsTrigger>
+            <TabsTrigger 
+              value="saved"
+              className="flex-1 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-medium rounded-none py-3"
+            >
+              <BookmarkIcon className="h-5 w-5 mr-2" />
+              <span className="hidden sm:inline">Saved</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="about"
+              className="flex-1 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-medium rounded-none py-3"
+            >
+              <UserIcon className="h-5 w-5 mr-2" />
+              <span className="hidden sm:inline">About</span>
+            </TabsTrigger>
           </TabsList>
-
-          <div className="px-4 pt-2 pb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">23 Posts</h2>
-              <Button variant="link" className="text-orange-500">
-                View Archives
-              </Button>
-            </div>
+        </div>
+        
+        <div className="px-4 pt-2 pb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">23 Posts</h2>
+            <Button variant="link" className="text-orange-500">
+              View Archives
+            </Button>
           </div>
-
-          <TabsContent value="posts" className="px-4">
-            <div className="grid grid-cols-2 gap-2">
-              {posts && posts.length > 0 ? posts.map(post => (
-                <div key={post.id} className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
-                  {post.mediaUrl ? (
-                    <img 
-                      src={post.mediaUrl} 
-                      alt={post.content} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <ImageIcon className="h-8 w-8" />
-                    </div>
-                  )}
-                </div>
-              )) : (
+        </div>
+        
+        <TabsContent value="posts" className="px-4">
+          <div className="grid grid-cols-2 gap-2">
+            {posts && posts.length > 0 ? posts.map(post => (
+              <div key={post.id} className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
+                {post.mediaUrl ? (
+                  <img 
+                    src={post.mediaUrl} 
+                    alt={post.content} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <ImageIcon className="h-8 w-8" />
+                  </div>
+                )}
+              </div>
+            )) : (
                 <div className="text-center py-12 text-gray-500">
                   <Grid3X3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   {isCurrentUser ? (
@@ -373,11 +432,55 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
                   )}
                 </div>
               )}
+            </>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="saved" className="mt-4 px-4">
+          <div className="text-center py-12 text-gray-500">
+            <BookmarkIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p className="text-lg font-medium">No saved posts</p>
+            <p className="text-sm mt-1">Posts you save will appear here</p>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="about" className="mt-4 px-4">
+          <div className="space-y-6">
+            <UserInfo user={profileUser} isCurrentUser={isCurrentUser} />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <SecretLover isCurrentUser={isCurrentUser} />
+              <GiftArea isCurrentUser={isCurrentUser} userId={profileUser.id} />
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Avatar3D 
+                isCurrentUser={isCurrentUser} 
+                avatarData={profileUser.avatarData} 
+              />
+              <MessageSettings isCurrentUser={isCurrentUser} />
+            </div>
+            
+            <NicknameManager 
+              isCurrentUser={isCurrentUser} 
+              targetUser={{
+                id: profileUser.id,
+                fullName: profileUser.fullName,
+                username: profileUser.username
+              }}
+              initialNickname="Sweetheart" 
+            />
+            
+            <SubscriptionStatus 
+              isCurrentUser={isCurrentUser} 
+              isPremium={profileUser.isPremium || false} 
+              expiresAt={profileUser.premiumExpiresAt ? new Date(profileUser.premiumExpiresAt) : undefined} 
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Logout confirmation modal */}
       <ModalDialog
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
