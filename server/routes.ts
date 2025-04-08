@@ -84,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
-        
+
         if (data.type === 'authenticate') {
           userId = data.userId;
           clients.set(userId, ws);
@@ -97,9 +97,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             content: data.content,
             read: false
           });
-          
+
           const savedMessage = await storage.createMessage(messageData);
-          
+
           // Send to the recipient if they're online
           const recipientWs = clients.get(data.receiverId);
           if (recipientWs && recipientWs.readyState === WebSocket.OPEN) {
@@ -108,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               message: savedMessage
             }));
           }
-          
+
           // Send confirmation back to the sender
           ws.send(JSON.stringify({
             type: 'message_sent',
@@ -126,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (data.type === 'read_messages' && userId) {
           // Mark messages as read
           await storage.markMessagesAsRead(data.senderId, userId);
-          
+
           // Notify the original sender that messages were read
           const senderWs = clients.get(data.senderId);
           if (senderWs && senderWs.readyState === WebSocket.OPEN) {
@@ -161,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errors: err.errors
       });
     }
-    
+
     console.error("Server error:", err);
     return res.status(500).json({ message: "Internal server error" });
   };
@@ -178,20 +178,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/register', async (req, res) => {
     try {
       const userData = registerSchema.parse(req.body);
-      
+
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(userData.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
-      
+
       // Create the user (omit confirmPassword)
       const { confirmPassword, ...userToCreate } = userData;
       const newUser = await storage.createUser(userToCreate);
-      
+
       // Set session
       req.session.userId = newUser.id;
-      
+
       // Return user without password
       const { password, ...userWithoutPassword } = newUser;
       res.status(201).json(userWithoutPassword);
@@ -203,15 +203,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/login', async (req, res) => {
     try {
       const loginData = loginSchema.parse(req.body);
-      
+
       const user = await storage.getUserByUsername(loginData.username);
       if (!user || user.password !== loginData.password) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
-      
+
       // Set session
       req.session.userId = user.id;
-      
+
       // Return user without password
       const { password, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
@@ -234,12 +234,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.session.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
+
     const user = await storage.getUser(req.session.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     // Return user without password
     const { password, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
@@ -263,11 +263,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Return user without password
       const { password, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
@@ -279,18 +279,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/users/:id', requireAuth, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       // Only allow users to update their own profile
       if (req.session.userId !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       const updatedUser = await storage.updateUser(userId, req.body);
-      
+
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Return user without password
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -298,55 +298,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       handleValidationError(err, res);
     }
   });
-  
+
   // Configure multer for file uploads
-  const storage_engine = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = './uploads/profile-pictures';
-      fs.ensureDirSync(dir); // Create directory if it doesn't exist
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      const userId = req.session.userId;
-      const ext = path.extname(file.originalname).toLowerCase();
-      const filename = `user_${userId}_${Date.now()}${ext}`;
-      cb(null, filename);
-    }
-  });
-  
   const upload = multer({
-    storage: storage_engine,
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => {
+        const dir = file.fieldname === 'profilePicture' ? './uploads/profile-pictures' : './uploads/posts';
+        fs.ensureDirSync(dir);
+        cb(null, dir);
+      },
+      filename: (req, file, cb) => {
+        const userId = req.session.userId;
+        const ext = path.extname(file.originalname).toLowerCase();
+        const filename = `${file.fieldname}_${userId}_${Date.now()}${ext}`;
+        cb(null, filename);
+      }
+    }),
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (req, file, cb) => {
       const allowedTypes = ['.jpg', '.jpeg', '.png', '.gif'];
       const ext = path.extname(file.originalname).toLowerCase();
-      
+
       if (!allowedTypes.includes(ext)) {
         return cb(new Error('Only image files are allowed!'));
       }
       cb(null, true);
     }
   });
-  
+
   // Profile picture upload route
   app.post('/api/users/profile-picture', requireAuth, upload.single('profilePicture'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ success: false, message: "No file uploaded" });
       }
-      
+
       const userId = req.session.userId as number;
       const filePath = `/uploads/profile-pictures/${req.file.filename}`;
-      
+
       // Update user profile with new picture URL
       const updatedUser = await storage.updateUser(userId, {
         profilePicture: filePath
       });
-      
+
       if (!updatedUser) {
         return res.status(404).json({ success: false, message: "User not found" });
       }
-      
+
       // Return success
       res.json({ 
         success: true, 
@@ -364,10 +362,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId as number;
       const targetUserId = parseInt(req.body.userId);
-      
+
       // Check if match already exists
       const existingMatch = await storage.getMatch(userId, targetUserId);
-      
+
       if (existingMatch) {
         if (existingMatch.userId1 === userId && existingMatch.status === "pending") {
           return res.status(400).json({ message: "You already liked this user" });
@@ -381,14 +379,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "This match was rejected" });
         }
       }
-      
+
       // Create new pending match
       const newMatch = await storage.createMatch({
         userId1: userId,
         userId2: targetUserId,
         status: "pending"
       });
-      
+
       res.status(201).json(newMatch);
     } catch (err) {
       handleValidationError(err, res);
@@ -410,17 +408,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const matchId = parseInt(req.params.id);
       const userId = req.session.userId as number;
       const status = req.body.status;
-      
+
       if (!status || !['matched', 'rejected'].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
-      
+
       const updatedMatch = await storage.updateMatchStatus(matchId, status);
-      
+
       if (!updatedMatch) {
         return res.status(404).json({ message: "Match not found" });
       }
-      
+
       res.json(updatedMatch);
     } catch (err) {
       handleValidationError(err, res);
@@ -432,12 +430,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const currentUserId = req.session.userId as number;
       const otherUserId = parseInt(req.params.userId);
-      
+
       const messages = await storage.getMessagesBetweenUsers(currentUserId, otherUserId);
-      
+
       // Mark messages from the other user as read
       await storage.markMessagesAsRead(otherUserId, currentUserId);
-      
+
       res.json(messages);
     } catch (err) {
       handleValidationError(err, res);
@@ -447,13 +445,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/messages', requireAuth, async (req, res) => {
     try {
       const senderId = req.session.userId as number;
-      
+
       const messageData = insertMessageSchema.parse({
         ...req.body,
         senderId,
         read: false
       });
-      
+
       const savedMessage = await storage.createMessage(messageData);
       res.status(201).json(savedMessage);
     } catch (err) {
@@ -464,24 +462,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/conversations', requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId as number;
-      
+
       const conversations = await storage.getConversations(userId);
-      
+
       // Fetch user details for each conversation
       const conversationsWithUsers = await Promise.all(
         conversations.map(async (conv) => {
           const user = await storage.getUser(conv.userId);
           if (!user) return null;
-          
+
           const { password, ...userWithoutPassword } = user;
-          
+
           return {
             user: userWithoutPassword,
             lastMessage: conv.lastMessage
           };
         })
       );
-      
+
       // Filter out any null entries and sort by most recent message
       const validConversations = conversationsWithUsers
         .filter(Boolean)
@@ -489,7 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           new Date(b!.lastMessage.createdAt).getTime() - 
           new Date(a!.lastMessage.createdAt).getTime()
         );
-      
+
       res.json(validConversations);
     } catch (err) {
       handleValidationError(err, res);
@@ -510,18 +508,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/stories', requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId as number;
-      
+
       // Set expiry to 24 hours from now
       const now = new Date();
       const expiresAt = new Date(now);
       expiresAt.setHours(expiresAt.getHours() + 24);
-      
+
       const storyData = insertStorySchema.parse({
         ...req.body,
         userId,
         expiresAt
       });
-      
+
       const savedStory = await storage.createStory(storyData);
       res.status(201).json(savedStory);
     } catch (err) {
@@ -532,25 +530,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/stories', requireAuth, async (req, res) => {
     try {
       const activeStories = await storage.getActiveStories();
-      
+
       // Group stories by user
       const storiesByUser = new Map<number, any[]>();
-      
+
       for (const story of activeStories) {
         if (!storiesByUser.has(story.userId)) {
           storiesByUser.set(story.userId, []);
         }
         storiesByUser.get(story.userId)!.push(story);
       }
-      
+
       // Fetch user details for each group
       const result = await Promise.all(
         Array.from(storiesByUser.entries()).map(async ([userId, stories]) => {
           const user = await storage.getUser(userId);
           if (!user) return null;
-          
+
           const { password, ...userWithoutPassword } = user;
-          
+
           return {
             user: userWithoutPassword,
             stories: stories.sort((a, b) => 
@@ -559,10 +557,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         })
       );
-      
+
       // Filter out any null entries
       const validStoryGroups = result.filter(Boolean);
-      
+
       res.json(validStoryGroups);
     } catch (err) {
       handleValidationError(err, res);
@@ -573,11 +571,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.userId);
       const stories = await storage.getStoriesByUser(userId);
-      
+
       // Filter to only active stories
       const now = new Date();
       const activeStories = stories.filter(story => new Date(story.expiresAt) > now);
-      
+
       res.json(activeStories);
     } catch (err) {
       handleValidationError(err, res);
@@ -585,17 +583,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Post routes
-  app.post('/api/posts', requireAuth, async (req, res) => {
+  app.post('/api/posts', requireAuth, upload.single('media'), async (req, res) => {
     try {
       const userId = req.session.userId as number;
-      
+
       const postData = insertPostSchema.parse({
-        ...req.body,
-        userId
+        content: req.body.content,
+        userId,
+        mediaUrl: req.file ? `/uploads/posts/${req.file.filename}` : undefined
       });
-      
+
       const savedPost = await storage.createPost(postData);
-      res.status(201).json(savedPost);
+
+      // Get user info to return with post
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const { password, ...userWithoutPassword } = user;
+
+      const enhancedPost = {
+        ...savedPost,
+        user: userWithoutPassword,
+        comments: [],
+        likes: 0,
+        userLiked: false
+      };
+
+      res.status(201).json(enhancedPost);
     } catch (err) {
       handleValidationError(err, res);
     }
@@ -605,7 +621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId as number;
       const posts = await storage.getFeedForUser(userId);
-      
+
       // Enhance posts with user, comments, and likes
       const enhancedPosts = await Promise.all(
         posts.map(async (post) => {
@@ -613,26 +629,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const comments = await storage.getCommentsByPost(post.id);
           const likes = await storage.getLikesByPost(post.id);
           const userLiked = await storage.checkUserLiked(post.id, userId);
-          
+
           if (!user) return null;
-          
+
           const { password, ...userWithoutPassword } = user;
-          
+
           // Enhance comments with user info
           const enhancedComments = await Promise.all(
             comments.map(async (comment) => {
               const commentUser = await storage.getUser(comment.userId);
               if (!commentUser) return null;
-              
+
               const { password, ...commentUserWithoutPassword } = commentUser;
-              
+
               return {
                 ...comment,
                 user: commentUserWithoutPassword
               };
             })
           );
-          
+
           return {
             ...post,
             user: userWithoutPassword,
@@ -642,10 +658,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         })
       );
-      
+
       // Filter out any null entries
       const validPosts = enhancedPosts.filter(Boolean);
-      
+
       res.json(validPosts);
     } catch (err) {
       handleValidationError(err, res);
@@ -656,9 +672,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.userId);
       const currentUserId = req.session.userId as number;
-      
+
       const posts = await storage.getPostsByUser(userId);
-      
+
       // Enhance posts with user, comments, and likes
       const enhancedPosts = await Promise.all(
         posts.map(async (post) => {
@@ -666,11 +682,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const comments = await storage.getCommentsByPost(post.id);
           const likes = await storage.getLikesByPost(post.id);
           const userLiked = await storage.checkUserLiked(post.id, currentUserId);
-          
+
           if (!user) return null;
-          
+
           const { password, ...userWithoutPassword } = user;
-          
+
           return {
             ...post,
             user: userWithoutPassword,
@@ -680,10 +696,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         })
       );
-      
+
       // Filter out any null entries
       const validPosts = enhancedPosts.filter(Boolean);
-      
+
       res.json(validPosts);
     } catch (err) {
       handleValidationError(err, res);
@@ -694,39 +710,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const postId = parseInt(req.params.id);
       const userId = req.session.userId as number;
-      
+
       const post = await storage.getPost(postId);
-      
+
       if (!post) {
         return res.status(404).json({ message: "Post not found" });
       }
-      
+
       const user = await storage.getUser(post.userId);
       const comments = await storage.getCommentsByPost(postId);
       const likes = await storage.getLikesByPost(postId);
       const userLiked = await storage.checkUserLiked(postId, userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "Post user not found" });
       }
-      
+
       const { password, ...userWithoutPassword } = user;
-      
+
       // Enhance comments with user info
       const enhancedComments = await Promise.all(
         comments.map(async (comment) => {
           const commentUser = await storage.getUser(comment.userId);
           if (!commentUser) return null;
-          
+
           const { password, ...commentUserWithoutPassword } = commentUser;
-          
+
           return {
             ...comment,
             user: commentUserWithoutPassword
           };
         })
       );
-      
+
       const enhancedPost = {
         ...post,
         user: userWithoutPassword,
@@ -734,7 +750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         likes: likes.length,
         userLiked
       };
-      
+
       res.json(enhancedPost);
     } catch (err) {
       handleValidationError(err, res);
@@ -745,28 +761,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/comments', requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId as number;
-      
+
       const commentData = insertCommentSchema.parse({
         ...req.body,
         userId
       });
-      
+
       const savedComment = await storage.createComment(commentData);
-      
+
       // Get the user info to return with the comment
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       const { password, ...userWithoutPassword } = user;
-      
+
       const enhancedComment = {
         ...savedComment,
         user: userWithoutPassword
       };
-      
+
       res.status(201).json(enhancedComment);
     } catch (err) {
       handleValidationError(err, res);
@@ -776,27 +792,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/comments/post/:postId', requireAuth, async (req, res) => {
     try {
       const postId = parseInt(req.params.postId);
-      
+
       const comments = await storage.getCommentsByPost(postId);
-      
+
       // Enhance comments with user info
       const enhancedComments = await Promise.all(
         comments.map(async (comment) => {
           const user = await storage.getUser(comment.userId);
           if (!user) return null;
-          
+
           const { password, ...userWithoutPassword } = user;
-          
+
           return {
             ...comment,
             user: userWithoutPassword
           };
         })
       );
-      
+
       // Filter out any null entries
       const validComments = enhancedComments.filter(Boolean);
-      
+
       res.json(validComments);
     } catch (err) {
       handleValidationError(err, res);
@@ -807,15 +823,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/likes', requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId as number;
-      
+
       const likeData = insertLikeSchema.parse({
         ...req.body,
         userId
       });
-      
+
       // Check if already liked
       const alreadyLiked = await storage.checkUserLiked(likeData.postId, userId);
-      
+
       if (alreadyLiked) {
         // Unlike
         await storage.deleteLike(likeData.postId, userId);
@@ -835,15 +851,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const followerId = req.session.userId as number;
       const followingId = parseInt(req.body.followingId);
-      
+
       // Cannot follow yourself
       if (followerId === followingId) {
         return res.status(400).json({ message: "Cannot follow yourself" });
       }
-      
+
       // Check if already following
       const alreadyFollowing = await storage.checkUserFollows(followerId, followingId);
-      
+
       if (alreadyFollowing) {
         // Unfollow
         await storage.deleteFollow(followerId, followingId);
@@ -854,7 +870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           followerId,
           followingId
         });
-        
+
         await storage.createFollow(followData);
         res.status(201).json({ following: true });
       }
@@ -867,9 +883,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const followerId = req.session.userId as number;
       const followingId = parseInt(req.params.userId);
-      
+
       const isFollowing = await storage.checkUserFollows(followerId, followingId);
-      
+
       res.json({ following: isFollowing });
     } catch (err) {
       handleValidationError(err, res);
@@ -879,15 +895,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/follows/followers/:userId', requireAuth, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      
+
       const followers = await storage.getFollowers(userId);
-      
+
       // Remove passwords
       const followersWithoutPasswords = followers.map(follower => {
         const { password, ...userWithoutPassword } = follower;
         return userWithoutPassword;
       });
-      
+
       res.json(followersWithoutPasswords);
     } catch (err) {
       handleValidationError(err, res);
@@ -897,15 +913,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/follows/following/:userId', requireAuth, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      
+
       const following = await storage.getFollowing(userId);
-      
+
       // Remove passwords
       const followingWithoutPasswords = following.map(user => {
         const { password, ...userWithoutPassword } = user;
         return userWithoutPassword;
       });
-      
+
       res.json(followingWithoutPasswords);
     } catch (err) {
       handleValidationError(err, res);
@@ -919,11 +935,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { planType } = req.body;
         let amount = 999; // Default $9.99
-        
+
         if (planType === 'yearly') {
           amount = 8999; // $89.99 for yearly
         }
-        
+
         const paymentIntent = await stripe.paymentIntents.create({
           amount: amount,
           currency: "usd",
@@ -933,7 +949,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: 'one-time'
           }
         });
-        
+
         res.json({ clientSecret: paymentIntent.client_secret });
       } catch (error: any) {
         console.error('Payment intent error:', error);
@@ -948,7 +964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const userId = req.session.userId!;
         const user = await storage.getUser(userId);
-        
+
         if (!user) {
           return res.status(404).json({ message: "User not found" });
         }
@@ -957,7 +973,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (user.stripeCustomerId && user.stripeSubscriptionId) {
           try {
             const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-            
+
             // If subscription is active, return its info
             if (subscription.status === 'active') {
               return res.json({
@@ -966,13 +982,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
               });
             }
-            
+
             // If subscription has a pending payment, return its client secret
             if (subscription.latest_invoice?.payment_intent) {
               const paymentIntent = await stripe.paymentIntents.retrieve(
                 subscription.latest_invoice.payment_intent as string
               );
-              
+
               return res.json({
                 subscriptionId: subscription.id,
                 clientSecret: paymentIntent.client_secret,
@@ -984,17 +1000,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('Error retrieving subscription:', error);
           }
         }
-        
+
         const { planType } = req.body;
         let priceId;
-        
+
         // In a real application, you would have actual price IDs from Stripe
         // For this demo, we'll use placeholders
         switch(planType) {
           case 'basic':
             priceId = 'price_basic_monthly'; // Replace with your actual price ID
             break;
-          case 'premium':
+          case ''premium':
             priceId = 'price_premium_monthly'; // Replace with your actual price ID
             break;
           case 'vip':
@@ -1014,7 +1030,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               userId: user.id.toString(),
             }
           });
-          
+
           // Update user with new Stripe customer ID
           stripeCustomerId = customer.id;
           await storage.updateStripeCustomerId(user.id, customer.id);
@@ -1048,11 +1064,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Update user with subscription ID
         await storage.updateStripeSubscriptionId(user.id, subscription.id);
-        
+
         // Get the client secret from the invoice payment intent
         const invoice = subscription.latest_invoice as any;
         const paymentIntent = invoice.payment_intent as any;
-        
+
         res.json({
           subscriptionId: subscription.id,
           clientSecret: paymentIntent.client_secret,
@@ -1072,7 +1088,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const userId = req.session.userId!;
         const user = await storage.getUser(userId);
-        
+
         if (!user) {
           return res.status(404).json({ message: "User not found" });
         }
@@ -1083,7 +1099,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         try {
           const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-          
+
           res.json({
             hasSubscription: true,
             status: subscription.status,
@@ -1112,7 +1128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.post('/api/webhook', async (req, res) => {
       try {
         const event = req.body; // In production, verify webhook signature
-        
+
         // Handle the event
         switch (event.type) {
           case 'payment_intent.succeeded':
@@ -1124,46 +1140,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Update user with premium status until a certain date
                 const expirationDate = new Date();
                 expirationDate.setDate(expirationDate.getDate() + 30); // 30 days for monthly
-                
+
                 if (paymentIntent.metadata.planType === 'yearly') {
                   expirationDate.setDate(expirationDate.getDate() + 335); // Add the rest of the year
                 }
-                
+
                 await storage.updatePremiumStatus(userId, true, expirationDate);
               }
             }
             break;
-            
+
           case 'invoice.payment_succeeded':
             const invoice = event.data.object;
             // Handle successful subscription payment
             if (invoice.subscription) {
               const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
               const userId = parseInt(subscription.metadata?.userId);
-              
+
               if (!isNaN(userId)) {
                 // Update user with active subscription status
                 await storage.updatePremiumStatus(userId, true);
               }
             }
             break;
-            
+
           case 'customer.subscription.updated':
           case 'customer.subscription.deleted':
             const subscription = event.data.object;
             const userId = parseInt(subscription.metadata?.userId);
-            
+
             if (!isNaN(userId)) {
               // Update user's subscription status based on the subscription status
               const isActive = subscription.status === 'active' || subscription.status === 'trialing';
               await storage.updatePremiumStatus(userId, isActive);
             }
             break;
-            
+
           default:
             console.log(`Unhandled event type ${event.type}`);
         }
-        
+
         res.json({ received: true });
       } catch (err: any) {
         console.error('Webhook error:', err.message);
@@ -1173,21 +1189,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } else {
     // Stripe not configured - add stub routes for development
     console.warn("Stripe not configured - payment features will be unavailable");
-    
+
     app.post("/api/create-payment-intent", requireAuth, (req, res) => {
       res.status(503).json({ 
         error: true,
         message: "Stripe not configured - payment features unavailable" 
       });
     });
-    
+
     app.post('/api/get-or-create-subscription', requireAuth, (req, res) => {
       res.status(503).json({ 
         error: true,
         message: "Stripe not configured - subscription features unavailable" 
       });
     });
-    
+
     app.get('/api/user/subscription', requireAuth, (req, res) => {
       res.json({ 
         error: true,
@@ -1201,23 +1217,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/events', requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId as number;
-      
+
       const events = await storage.listEvents();
-      
+
       // Enhance events with creator info and attendee count
       const enhancedEvents = await Promise.all(
         events.map(async (event) => {
           const creator = await storage.getUser(event.createdBy);
           const attendees = await storage.getEventAttendees(event.id);
           const userStatus = await storage.getUserEventStatus(event.id, userId);
-          
+
           if (!creator) return null;
-          
+
           const { password, ...creatorWithoutPassword } = creator;
-          
+
           // Filter attendees who are "going"
           const goingAttendees = attendees.filter(att => att.status === "going");
-          
+
           return {
             ...event,
             creator: creatorWithoutPassword,
@@ -1226,13 +1242,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         })
       );
-      
+
       // Filter out any null entries and only show future events
       const now = new Date();
       const validEvents = enhancedEvents
         .filter(Boolean)
         .filter(event => new Date(event!.date) > now);
-      
+
       res.json(validEvents);
     } catch (err) {
       handleValidationError(err, res);
@@ -1242,14 +1258,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/events', requireAuth, async (req, res) => {
     try {
       const createdBy = req.session.userId as number;
-      
+
       // Parse and format the date properly for the database
       const eventData = insertEventSchema.parse({
         ...req.body,
         createdBy,
         date: new Date(req.body.date)
       });
-      
+
       const savedEvent = await storage.createEvent(eventData);
       res.status(201).json(savedEvent);
     } catch (err) {
@@ -1262,14 +1278,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.session.userId as number;
       const eventId = parseInt(req.params.eventId);
       const status = req.body.status;
-      
+
       if (!status || !['going', 'maybe', 'not_going'].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
-      
+
       // Check if user already has a status for this event
       const existingStatus = await storage.getUserEventStatus(eventId, userId);
-      
+
       if (existingStatus) {
         // Update existing status
         const updatedAttendee = await storage.updateEventAttendeeStatus(eventId, userId, status);
@@ -1281,7 +1297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId,
           status
         });
-        
+
         const savedAttendee = await storage.createEventAttendee(attendeeData);
         res.status(201).json(savedAttendee);
       }
@@ -1294,13 +1310,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/date-bookings', requireAuth, async (req, res) => {
     try {
       const requesterId = req.session.userId as number;
-      
+
       const bookingData = insertDateBookingSchema.parse({
         ...req.body,
         requesterId,
         status: "pending"
       });
-      
+
       const savedBooking = await storage.createDateBooking(bookingData);
       res.status(201).json(savedBooking);
     } catch (err) {
@@ -1311,20 +1327,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/date-bookings', requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId as number;
-      
+
       const bookings = await storage.getDateBookingsByUser(userId);
-      
+
       // Enhance bookings with user info
       const enhancedBookings = await Promise.all(
         bookings.map(async (booking) => {
           const requester = await storage.getUser(booking.requesterId);
           const recipient = await storage.getUser(booking.recipientId);
-          
+
           if (!requester || !recipient) return null;
-          
+
           const { password: requesterPass, ...requesterWithoutPassword } = requester;
           const { password: recipientPass, ...recipientWithoutPassword } = recipient;
-          
+
           return {
             ...booking,
             requester: requesterWithoutPassword,
@@ -1332,10 +1348,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         })
       );
-      
+
       // Filter out any null entries
       const validBookings = enhancedBookings.filter(Boolean);
-      
+
       res.json(validBookings);
     } catch (err) {
       handleValidationError(err, res);
@@ -1347,33 +1363,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bookingId = parseInt(req.params.id);
       const userId = req.session.userId as number;
       const status = req.body.status;
-      
+
       if (!status || !['accepted', 'rejected', 'cancelled'].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
-      
+
       // Get the booking to check permissions
       const booking = await storage.getDateBooking(bookingId);
-      
+
       if (!booking) {
         return res.status(404).json({ message: "Booking not found" });
       }
-      
+
       // Only the recipient can accept/reject, only the requester can cancel
       if ((status === 'accepted' || status === 'rejected') && booking.recipientId !== userId) {
         return res.status(403).json({ message: "Only the recipient can accept or reject" });
       }
-      
+
       if (status === 'cancelled' && booking.requesterId !== userId) {
         return res.status(403).json({ message: "Only the requester can cancel" });
       }
-      
+
       const updatedBooking = await storage.updateDateBookingStatus(bookingId, status);
-      
+
       if (!updatedBooking) {
         return res.status(404).json({ message: "Booking not found" });
       }
-      
+
       res.json(updatedBooking);
     } catch (err) {
       handleValidationError(err, res);
