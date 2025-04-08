@@ -1,7 +1,9 @@
 
 {
-  "variant": "minimal",
-  "primary": "hsl(210, 95%, 60%)",
-  "appearance": "light",
-  "radius": 2.0
+  "name": "minimal",
+  "type": "dark",
+  "colors": {
+    "background": "#000000",
+    "foreground": "#ffffff"
+  }
 }
