@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
@@ -40,29 +39,61 @@ const MatchesPage: React.FC = () => {
     matchedUser: null
   });
 
-  // Fetch all users
-  const { data: users, isLoading: usersLoading } = useQuery<User[]>({
-    queryKey: ['users'],
+  // Fetch potential matches
+  const { data: potentialMatches, isLoading: matchesLoading } = useQuery<User[]>({
+    queryKey: ['potential-matches'],
     queryFn: async () => {
-      const response = await apiRequest('GET', API_ENDPOINTS.USERS.LIST);
-      return response;
+      if (!user) return [];
+
+      const [usersResponse, matchesResponse] = await Promise.all([
+        apiRequest('GET', API_ENDPOINTS.USERS.LIST),
+        apiRequest('GET', API_ENDPOINTS.MATCHES.LIST)
+      ]);
+
+      // Get all matched user IDs (both liked and matched)
+      const matchedUserIds = new Set(
+        Array.isArray(matchesResponse) ? 
+          matchesResponse
+            .filter(match => match.userId1 === user.id || match.userId2 === user.id)
+            .map(match => match.userId1 === user.id ? match.userId2 : match.userId1)
+          : []
+      );
+
+      // Filter users to show only those not yet matched
+      const validUsers = Array.isArray(usersResponse) ? 
+        usersResponse.filter((u: User) => 
+          // Exclude current user
+          u.id !== user.id && 
+          // Exclude already matched/liked users
+          !matchedUserIds.has(u.id) &&
+          // Make sure user has required fields
+          u.fullName && 
+          // Add any additional filtering criteria here
+          true
+        ) : [];
+
+      // Sort users by match criteria (simple example)
+      return validUsers.sort((a, b) => {
+        // Sort by completeness of profile
+        const scoreA = (a.profilePicture ? 1 : 0) + (a.bio ? 1 : 0) + (a.interests?.length ? 1 : 0);
+        const scoreB = (b.profilePicture ? 1 : 0) + (b.bio ? 1 : 0) + (b.interests?.length ? 1 : 0);
+        return scoreB - scoreA;
+      });
     },
     enabled: !!user,
   });
-
-  // Filter out the current user
-  const potentialMatches = users?.filter(u => u.id !== user?.id) || [];
 
   // Create match mutation
   const createMatchMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: number, status: string }) => {
       return apiRequest('POST', API_ENDPOINTS.MATCHES.CREATE, {
-        userId,
+        userId1: user?.id,
+        userId2: userId,
         status,
       });
     },
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['potential-matches'] });
       
       // If it's a match, show the animation
       if (data && data.status === 'matched') {
@@ -73,13 +104,6 @@ const MatchesPage: React.FC = () => {
         });
       }
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Something went wrong while matching",
-        variant: "destructive",
-      });
-    }
   });
 
   const handleLike = () => {
@@ -131,13 +155,13 @@ const MatchesPage: React.FC = () => {
           <p className="text-gray-500 text-sm">Discover people nearby</p>
         </div>
 
-        {usersLoading && (
+        {matchesLoading && (
           <div className="flex justify-center items-center h-[50vh]">
             <Loader2 className="w-10 h-10 animate-spin text-primary" />
           </div>
         )}
 
-        {!usersLoading && (!potentialMatches || potentialMatches.length === 0 || currentProfileIndex >= potentialMatches.length) && (
+        {!matchesLoading && (!potentialMatches || potentialMatches.length === 0 || currentProfileIndex >= potentialMatches.length) && (
           <div className="text-center p-8 bg-[#F8F5F0] rounded-3xl shadow-lg mx-auto max-w-md">
             <div className="w-20 h-20 rounded-full bg-primary/10 mx-auto mb-4 flex items-center justify-center">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
@@ -156,62 +180,62 @@ const MatchesPage: React.FC = () => {
           </div>
         )}
 
-        {!usersLoading && potentialMatches && potentialMatches.length > 0 && currentProfileIndex < potentialMatches.length && (
+        {!matchesLoading && potentialMatches && potentialMatches.length > 0 && currentProfileIndex < potentialMatches.length && (
           <div className="relative mx-auto max-w-md h-[60vh]">
             <AnimatePresence>
-              {currentProfile && (
-                <motion.div
-                  key={currentProfile.id}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ 
-                    scale: 1, 
-                    opacity: 1,
-                    x: direction === 'left' ? -300 : direction === 'right' ? 300 : 0 
+              <motion.div
+                key={currentProfile?.id}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ 
+                  scale: 1, 
+                  opacity: 1,
+                  x: direction === 'left' ? -300 : direction === 'right' ? 300 : 0 
+                }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="relative bg-[#F8F5F0] rounded-3xl shadow-lg overflow-hidden h-full"
+              >
+                <div 
+                  className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70 z-10"
+                  style={{ 
+                    backgroundImage: currentProfile?.profilePicture 
+                      ? `url(${currentProfile.profilePicture})` 
+                      : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
                   }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="relative bg-[#F8F5F0] rounded-3xl shadow-lg overflow-hidden h-full"
-                >
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ 
-                      backgroundImage: currentProfile.profilePicture 
-                        ? `url(${currentProfile.profilePicture})` 
-                        : 'none'
-                    }}
-                  />
+                />
+                
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70 z-20" />
+                
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-30 text-white">
+                  <h3 className="text-2xl font-bold mb-1 flex items-center">
+                    {currentProfile?.fullName} 
+                    {currentProfile?.age && <span className="ml-2 text-xl">{currentProfile.age}</span>}
+                  </h3>
                   
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70 z-20" />
+                  {currentProfile?.location && (
+                    <p className="text-white/80 mb-2">{currentProfile.location}</p>
+                  )}
                   
-                  <div className="absolute bottom-0 left-0 right-0 p-6 z-30 text-white">
-                    <h3 className="text-2xl font-bold mb-1 flex items-center">
-                      {currentProfile.fullName} 
-                      {currentProfile.age && <span className="ml-2 text-xl">{currentProfile.age}</span>}
-                    </h3>
-                    
-                    {currentProfile.location && (
-                      <p className="text-white/80 mb-2">{currentProfile.location}</p>
-                    )}
-                    
-                    {currentProfile.bio && (
-                      <p className="text-white/90 mb-4 line-clamp-3">{currentProfile.bio}</p>
-                    )}
-                    
-                    {currentProfile.interests && currentProfile.interests.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {currentProfile.interests.map((interest, idx) => (
-                          <span 
-                            key={idx}
-                            className="bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full"
-                          >
-                            {interest}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
+                  {currentProfile?.bio && (
+                    <p className="text-white/90 mb-4 line-clamp-3">{currentProfile.bio}</p>
+                  )}
+                  
+                  {currentProfile?.interests && currentProfile.interests.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {currentProfile.interests.map((interest, idx) => (
+                        <span 
+                          key={idx}
+                          className="bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full"
+                        >
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             </AnimatePresence>
             
             <div className="absolute bottom-[-30px] left-0 right-0 flex justify-center gap-4 z-40">
@@ -276,7 +300,7 @@ const MatchesPage: React.FC = () => {
                 >
                   <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
                     <AvatarImage src={user?.profilePicture} />
-                    <AvatarFallback>{getInitials(user?.fullName || '')}</AvatarFallback>
+                    <AvatarFallback>{getInitials(user?.fullName || user?.username || '')}</AvatarFallback>
                   </Avatar>
                 </motion.div>
                 
