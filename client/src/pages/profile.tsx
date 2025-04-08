@@ -162,33 +162,33 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
   return (
     <MainLayout>
       {/* Navigation header */}
-      <div className="bg-white py-4 px-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-gray-50/50">
-          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gray-100/50 blur-xl"></div>
-          <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-gray-100/50 blur-xl"></div>
+      <div className="bg-gradient-to-b from-white/80 to-white/60 backdrop-blur-md py-4 px-4 relative overflow-hidden sticky top-0 z-50 shadow-sm">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-pink-100/10 to-purple-100/10">
+          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-r from-pink-200/20 to-purple-200/20 blur-xl"></div>
+          <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-gradient-to-r from-purple-200/20 to-pink-200/20 blur-xl"></div>
         </div>
         
         <div className="flex justify-between items-center relative z-10">
           <Link href="/">
-            <Button variant="ghost" size="icon" className="bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
-              <ArrowLeft className="h-5 w-5" />
+            <Button variant="outline" size="icon" className="bg-white shadow-lg border-pink-100 hover:bg-pink-50">
+              <ArrowLeft className="h-5 w-5 text-gray-700" />
             </Button>
           </Link>
           
           {isCurrentUser ? (
             <div className="flex space-x-2">
               <Link href="/profile/edit">
-                <Button variant="ghost" size="icon" className="bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
-                  <Edit className="h-5 w-5" />
+                <Button variant="outline" size="icon" className="bg-white shadow-lg border-pink-100 hover:bg-pink-50">
+                  <Edit className="h-5 w-5 text-gray-700" />
                 </Button>
               </Link>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="icon" 
-                className="bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm"
+                className="bg-white shadow-lg border-pink-100 hover:bg-pink-50"
                 onClick={() => setShowLogoutConfirm(true)}
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-5 w-5 text-gray-700" />
               </Button>
             </div>
           ) : (
@@ -322,11 +322,11 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
       </div>
       
       <Tabs defaultValue="posts">
-        <div className="bg-white border-b border-gray-200 sticky top-14 z-10 shadow-sm">
-          <TabsList className="w-full bg-transparent rounded-none max-w-2xl mx-auto">
+        <div className="bg-gradient-to-b from-white/80 to-white/60 backdrop-blur-md border-b border-gray-100 sticky top-[72px] z-10 shadow-sm">
+          <TabsList className="w-full bg-transparent rounded-none max-w-2xl mx-auto p-1">
             <TabsTrigger 
               value="posts"
-              className="flex-1 data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-medium rounded-none py-3"
+              className="flex-1 py-3 px-4 rounded-lg text-gray-600 transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500/10 data-[state=active]:to-purple-500/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:backdrop-blur-sm"
             >
               <Grid3X3 className="h-5 w-5 mr-2" />
               <span className="hidden sm:inline">Posts</span>
