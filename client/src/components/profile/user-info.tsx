@@ -1,10 +1,10 @@
-import React from 'react';
-import { 
-  MapPin, 
-  Briefcase, 
-  Calendar, 
-  Mail, 
-  User, 
+import React from "react";
+import {
+  MapPin,
+  Briefcase,
+  Calendar,
+  Mail,
+  User,
   Heart,
   Info,
   GraduationCap,
@@ -13,12 +13,12 @@ import {
   Film,
   Book,
   Users,
-  Globe
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import OnlineStatus, { OnlineStatusType } from './online-status';
+  Globe,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import OnlineStatus, { OnlineStatusType } from "./online-status";
 
 interface UserProps {
   user: {
@@ -41,27 +41,27 @@ interface UserProps {
 const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
   // Format account creation date
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Unknown';
+    if (!dateString) return "Unknown";
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }).format(date);
   };
 
   // Simulate online status - would come from API in real app
-  const onlineStatus: OnlineStatusType = isCurrentUser ? 'online' : 'offline';
+  const onlineStatus: OnlineStatusType = isCurrentUser ? "online" : "offline";
   const lastActive = isCurrentUser ? undefined : new Date(Date.now() - 3600000); // 1 hour ago
 
   const interestIcons: Record<string, React.ReactNode> = {
-    'Music': <Music className="h-3 w-3" />,
-    'Food': <Utensils className="h-3 w-3" />,
-    'Movies': <Film className="h-3 w-3" />,
-    'Books': <Book className="h-3 w-3" />,
-    'Travel': <Globe className="h-3 w-3" />,
-    'Education': <GraduationCap className="h-3 w-3" />,
-    'Socializing': <Users className="h-3 w-3" />
+    Music: <Music className="h-3 w-3" />,
+    Food: <Utensils className="h-3 w-3" />,
+    Movies: <Film className="h-3 w-3" />,
+    Books: <Book className="h-3 w-3" />,
+    Travel: <Globe className="h-3 w-3" />,
+    Education: <GraduationCap className="h-3 w-3" />,
+    Socializing: <Users className="h-3 w-3" />,
   };
 
   // Get an appropriate icon for each interest
@@ -80,7 +80,7 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 flex justify-between items-center border-b border-indigo-100">
           <h3 className="text-lg font-semibold text-indigo-800 flex items-center">
             <Info className="h-5 w-5 mr-2 text-indigo-600" />
-            About {isCurrentUser ? 'Me' : user.fullName.split(' ')[0]}
+            About {isCurrentUser ? "Me" : user.fullName.split(" ")[0]}
           </h3>
           <OnlineStatus status={onlineStatus} lastActive={lastActive} />
         </div>
@@ -99,8 +99,12 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
                   <User className="h-5 w-5 text-sky-600" />
                 </div>
                 <div>
-                  <span className="text-sm text-sky-600 font-medium block">Gender</span>
-                  <span className="text-gray-700">{user.gender || 'Not specified'}</span>
+                  <span className="text-sm text-sky-600 font-medium block">
+                    Gender
+                  </span>
+                  <span className="text-gray-700">
+                    {user.gender || "Not specified"}
+                  </span>
                 </div>
               </div>
 
@@ -110,7 +114,9 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
                     <Calendar className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <span className="text-sm text-green-600 font-medium block">Age</span>
+                    <span className="text-sm text-green-600 font-medium block">
+                      Age
+                    </span>
                     <span className="text-gray-700">{user.age} years old</span>
                   </div>
                 </div>
@@ -122,7 +128,9 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
                     <MapPin className="h-5 w-5 text-emerald-600" />
                   </div>
                   <div>
-                    <span className="text-sm text-emerald-600 font-medium block">Location</span>
+                    <span className="text-sm text-emerald-600 font-medium block">
+                      Location
+                    </span>
                     <span className="text-gray-700">{user.location}</span>
                   </div>
                 </div>
@@ -136,8 +144,12 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
                     <Mail className="h-5 w-5 text-amber-600" />
                   </div>
                   <div>
-                    <span className="text-sm text-amber-600 font-medium block">Email</span>
-                    <span className="text-gray-700 break-all">{user.email}</span>
+                    <span className="text-sm text-amber-600 font-medium block">
+                      Email
+                    </span>
+                    <span className="text-gray-700 break-all">
+                      {user.email}
+                    </span>
                   </div>
                 </div>
               )}
@@ -148,7 +160,9 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
                     <Briefcase className="h-5 w-5 text-rose-600" />
                   </div>
                   <div>
-                    <span className="text-sm text-rose-600 font-medium block">Occupation</span>
+                    <span className="text-sm text-rose-600 font-medium block">
+                      Occupation
+                    </span>
                     <span className="text-gray-700">{user.occupation}</span>
                   </div>
                 </div>
@@ -160,13 +174,15 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
                     <div className="bg-violet-100/50 p-2 rounded-lg">
                       <Heart className="h-5 w-5 text-violet-600" />
                     </div>
-                    <span className="text-sm text-violet-600 font-medium">Interests</span>
+                    <span className="text-sm text-violet-600 font-medium">
+                      Interests
+                    </span>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {user.interests.map((interest, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
+                      <Badge
+                        key={index}
+                        variant="secondary"
                         className="bg-white/50 text-violet-700 border border-violet-200/50 hover:bg-violet-50/50"
                       >
                         {interest}
@@ -191,13 +207,15 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
           <CardContent className="pt-5">
             <div className="flex flex-wrap gap-2">
               {user.interests.map((interest, index) => (
-                <Badge 
-                  key={index} 
-                  variant="outline" 
+                <Badge
+                  key={index}
+                  variant="outline"
                   className="bg-gradient-to-r from-teal-50 to-teal-100 text-teal-800 border-teal-200 px-3 py-1"
                 >
                   <span className="flex items-center">
-                    <span className="mr-1.5 text-teal-600">{getInterestIcon(interest)}</span>
+                    <span className="mr-1.5 text-teal-600">
+                      {getInterestIcon(interest)}
+                    </span>
                     {interest}
                   </span>
                 </Badge>
@@ -207,7 +225,7 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
         </Card>
       )}
 
-      <Card className="overflow-hidden border-amber-200 mt-2">
+      <Card className="overflow-hidden border-amber-200 mt-2 ml-2 mr-2">
         <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-6 py-4">
           <h3 className="text-lg font-semibold text-amber-800 flex items-center">
             <User className="h-5 w-5 mr-2 text-amber-600" />
@@ -217,12 +235,12 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
         <CardContent className="pt-5">
           <div className="space-y-3 text-gray-700">
             <div className="flex items-center">
-              <span className="font-medium w-36">Username:</span> 
+              <span className="font-medium w-36">Username:</span>
               <span>@{user.username}</span>
             </div>
             <Separator className="my-2" />
             <div className="flex items-center">
-              <span className="font-medium w-36">Member since:</span> 
+              <span className="font-medium w-36">Member since:</span>
               <span>{formatDate(user.createdAt)}</span>
             </div>
           </div>
