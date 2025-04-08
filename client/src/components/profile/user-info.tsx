@@ -75,8 +75,8 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
   };
 
   return (
-    <div className="w-full">
-      <Card className="overflow-hidden border-indigo-200 hover:shadow-lg transition-all duration-300">
+    <div className="w-full px-2">
+      <Card className="overflow-hidden border-indigo-200 hover:shadow-lg transition-all duration-300 max-w-3xl mx-auto">
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 flex justify-between items-center border-b border-indigo-100">
           <h3 className="text-lg font-semibold text-indigo-800 flex items-center">
             <Info className="h-5 w-5 mr-2 text-indigo-600" />
@@ -225,7 +225,7 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
         </Card>
       )}
 
-      <Card className="overflow-hidden border-amber-200 mt-2 ml-2 mr-2">
+      <Card className="overflow-hidden border-amber-200 mt-2 mx-auto max-w-3xl">
         <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-6 py-4">
           <h3 className="text-lg font-semibold text-amber-800 flex items-center">
             <User className="h-5 w-5 mr-2 text-amber-600" />
