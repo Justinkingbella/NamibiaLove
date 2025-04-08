@@ -386,56 +386,104 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
           </div>
         </TabsContent>
         
-        <TabsContent value="about" className="mt-4 px-4">
-          <div className="grid gap-4 p-4 max-w-5xl mx-auto">
-            {/* About Me Section */}
-            <div className="col-span-full">
+        <TabsContent value="about" className="mt-4">
+          <div className="max-w-md mx-auto flex flex-col gap-2">
+            {/* User Info */}
+            <div className="rounded-xl overflow-hidden shadow-sm">
               <UserInfo user={profileUser} isCurrentUser={isCurrentUser} />
             </div>
             
-            {/* Secret Crush and Gifts Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-br from-pink-50/80 to-purple-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
-                <SecretLover isCurrentUser={isCurrentUser} />
-              </div>
-              <div className="bg-gradient-to-br from-purple-50/80 to-pink-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
-                <GiftArea isCurrentUser={isCurrentUser} userId={profileUser.id} />
-              </div>
-            </div>
-            
-            {/* Avatar and Message Settings Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-br from-indigo-50/80 to-cyan-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
-                <Avatar3D 
-                  isCurrentUser={isCurrentUser} 
-                  avatarData={profileUser.avatarData} 
-                />
-              </div>
-              <div className="bg-gradient-to-br from-cyan-50/80 to-indigo-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
-                <MessageSettings isCurrentUser={isCurrentUser} />
+            {/* Secret Lover */}
+            <div className="rounded-xl overflow-hidden shadow-sm">
+              <div className="flex items-center gap-3 p-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={profileUser.profilePicture} />
+                  <AvatarFallback>SL</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <SecretLover isCurrentUser={isCurrentUser} />
+                </div>
               </div>
             </div>
             
-            {/* Nickname Manager - Full Width */}
-            <div className="col-span-full bg-gradient-to-r from-yellow-50/80 to-orange-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
-              <NicknameManager 
-                isCurrentUser={isCurrentUser} 
-                targetUser={{
-                  id: profileUser.id,
-                  fullName: profileUser.fullName,
-                  username: profileUser.username
-                }}
-                initialNickname="Sweetheart" 
-              />
+            {/* Gift Area */}
+            <div className="rounded-xl overflow-hidden shadow-sm">
+              <div className="flex items-center gap-3 p-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src="/gift-icon.png" />
+                  <AvatarFallback>🎁</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <GiftArea isCurrentUser={isCurrentUser} userId={profileUser.id} />
+                </div>
+              </div>
             </div>
             
-            {/* Subscription Status - Full Width */}
-            <div className="col-span-full bg-gradient-to-r from-emerald-50/80 to-teal-50/80 rounded-2xl backdrop-blur-sm p-1 shadow-lg hover:shadow-xl transition-all duration-300">
-              <SubscriptionStatus 
-                isCurrentUser={isCurrentUser} 
-                isPremium={profileUser.isPremium || false} 
-                expiresAt={profileUser.premiumExpiresAt ? new Date(profileUser.premiumExpiresAt) : undefined} 
-              />
+            {/* 3D Avatar */}
+            <div className="rounded-xl overflow-hidden shadow-sm">
+              <div className="flex items-center gap-3 p-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src="/avatar-3d-icon.png" />
+                  <AvatarFallback>3D</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <Avatar3D 
+                    isCurrentUser={isCurrentUser} 
+                    avatarData={profileUser.avatarData} 
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Message Settings */}
+            <div className="rounded-xl overflow-hidden shadow-sm">
+              <div className="flex items-center gap-3 p-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src="/message-settings-icon.png" />
+                  <AvatarFallback>⚙️</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <MessageSettings isCurrentUser={isCurrentUser} />
+                </div>
+              </div>
+            </div>
+            
+            {/* Nickname Manager */}
+            <div className="rounded-xl overflow-hidden shadow-sm">
+              <div className="flex items-center gap-3 p-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src="/nickname-icon.png" />
+                  <AvatarFallback>👤</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <NicknameManager 
+                    isCurrentUser={isCurrentUser} 
+                    targetUser={{
+                      id: profileUser.id,
+                      fullName: profileUser.fullName,
+                      username: profileUser.username
+                    }}
+                    initialNickname="Sweetheart" 
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Subscription Status */}
+            <div className="rounded-xl overflow-hidden shadow-sm">
+              <div className="flex items-center gap-3 p-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src="/subscription-icon.png" />
+                  <AvatarFallback>⭐</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <SubscriptionStatus 
+                    isCurrentUser={isCurrentUser} 
+                    isPremium={profileUser.isPremium || false} 
+                    expiresAt={profileUser.premiumExpiresAt ? new Date(profileUser.premiumExpiresAt) : undefined} 
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
