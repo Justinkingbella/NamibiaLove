@@ -162,10 +162,10 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
   return (
     <MainLayout>
       {/* Navigation header */}
-      <div className="bg-gradient-to-r from-rose-500 to-fuchsia-500 py-4 px-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-20">
-          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/10 blur-xl"></div>
-          <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
+      <div className="bg-white py-4 px-4 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-gray-50/50">
+          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gray-100/50 blur-xl"></div>
+          <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-gray-100/50 blur-xl"></div>
         </div>
         
         <div className="flex justify-between items-center relative z-10">
@@ -208,10 +208,10 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
         </div>
       </div>
       
-      <div className="px-4 py-6 bg-[#FAF7F2] relative">
+      <div className="px-4 py-6 bg-white relative">
         {/* Profile header with avatar and basic info */}
-        <div className="max-w-2xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
+        <div className="max-w-md mx-auto">
+          <div className="flex flex-col items-center gap-4 relative z-10">
             <div className="relative">
               {isCurrentUser ? (
                 <div className="rounded-full p-1 bg-gradient-to-r from-pink-400 to-purple-400">
@@ -302,10 +302,10 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
                 <p className="mt-3 text-gray-600 max-w-md leading-relaxed">{profileUser.bio}</p>
               )}
               
-              <div className="flex justify-center md:justify-start space-x-12 mt-5">
+              <div className="grid grid-cols-3 gap-4 w-full mt-5 bg-gray-50 rounded-xl p-4">
                 <div className="text-center">
-                  <div className="font-bold text-gray-800 text-lg">120</div>
-                  <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Posts</div>
+                  <div className="font-medium text-gray-800">80% OFF</div>
+                  <div className="text-xs text-gray-500">Until Jul 7</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-gray-800 text-lg">856</div>
