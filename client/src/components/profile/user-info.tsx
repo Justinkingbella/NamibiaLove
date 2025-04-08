@@ -92,7 +92,7 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
               <div className="bg-gradient-to-br from-sky-50/50 to-blue-50/50 p-4 rounded-xl flex items-center gap-3 border border-sky-100/20 hover:shadow-md transition-all">
                 <div className="bg-sky-100/50 p-2 rounded-lg">
@@ -162,7 +162,7 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
                     </div>
                     <span className="text-sm text-violet-600 font-medium">Interests</span>
                   </div>
-                  <div className="flex flex-wrap gap-3 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {user.interests.map((interest, index) => (
                       <Badge 
                         key={index} 
