@@ -162,10 +162,10 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
   return (
     <MainLayout>
       {/* Navigation header */}
-      <div className="bg-white py-4 px-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-gray-50/50">
-          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gray-100/50 blur-xl"></div>
-          <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-gray-100/50 blur-xl"></div>
+      <div className="bg-white/90 backdrop-blur-md py-4 px-4 relative overflow-hidden border-b sticky top-0 z-50 shadow-sm">
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-r from-pink-100/20 to-purple-100/20 blur-xl"></div>
+          <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-gradient-to-r from-purple-100/20 to-pink-100/20 blur-xl"></div>
         </div>
         
         <div className="flex justify-between items-center relative z-10">
