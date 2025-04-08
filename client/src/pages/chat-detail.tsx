@@ -34,7 +34,6 @@ const ChatDetail: React.FC = () => {
   const [match, params] = useRoute<{ id: string }>('/chat/:id');
   const [, setLocation] = useLocation();
   const { user } = useAuth();
-  const [showVideoChat, setShowVideoChat] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -158,16 +157,8 @@ const ChatDetail: React.FC = () => {
   }
 
   return (
-    <>
-      <>
-        {showVideoChat && otherUser && (
-          <VideoChat 
-            otherUserId={otherUser.id} 
-            onClose={() => setShowVideoChat(false)} 
-          />
-        )}
-        <MainLayout hideBottomNav>
-          <div className="app-container flex flex-col h-[100dvh] overflow-hidden">
+    <MainLayout hideBottomNav>
+      <div className="app-container flex flex-col h-[100dvh] overflow-hidden">
         <header className="bg-white px-3 py-2 sticky top-0 z-10 shadow-md border-b border-gray-100">
           <div className="flex items-center">
             <Button 
@@ -206,12 +197,7 @@ const ChatDetail: React.FC = () => {
               <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 text-primary">
                 <Phone className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full w-8 h-8 text-primary"
-                onClick={() => setShowVideoChat(true)}
-              >
+              <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 text-primary">
                 <Video className="h-4 w-4" />
               </Button>
             </div>
