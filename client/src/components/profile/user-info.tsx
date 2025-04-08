@@ -84,66 +84,102 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
           </h3>
           <OnlineStatus status={onlineStatus} lastActive={lastActive} />
         </div>
-        
+
         <CardContent className="pt-5">
           {user.bio && (
             <div className="mb-4">
               <p className="text-gray-700 italic">"{user.bio}"</p>
             </div>
           )}
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-gray-700">
-                <User className="h-4 w-4 text-indigo-500" />
-                <span className="font-medium">Gender:</span> 
-                <span>{user.gender || 'Not specified'}</span>
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-sky-50/50 to-blue-50/50 p-4 rounded-xl flex items-center gap-3 border border-sky-100/20 hover:shadow-md transition-all">
+                <div className="bg-sky-100/50 p-2 rounded-lg">
+                  <User className="h-5 w-5 text-sky-600" />
+                </div>
+                <div>
+                  <span className="text-sm text-sky-600 font-medium block">Gender</span>
+                  <span className="text-gray-700">{user.gender || 'Not specified'}</span>
+                </div>
               </div>
-              
+
               {user.age && (
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Calendar className="h-4 w-4 text-indigo-500" />
-                  <span className="font-medium">Age:</span>
-                  <span>{user.age} years old</span>
+                <div className="bg-gradient-to-br from-green-50/50 to-lime-50/50 p-4 rounded-xl flex items-center gap-3 border border-green-100/20 hover:shadow-md transition-all">
+                  <div className="bg-green-100/50 p-2 rounded-lg">
+                    <Calendar className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <span className="text-sm text-green-600 font-medium block">Age</span>
+                    <span className="text-gray-700">{user.age} years old</span>
+                  </div>
                 </div>
               )}
-              
+
               {user.location && (
-                <div className="flex items-center gap-2 text-gray-700">
-                  <MapPin className="h-4 w-4 text-indigo-500" />
-                  <span className="font-medium">Location:</span>
-                  <span>{user.location}, Namibia</span>
+                <div className="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 p-4 rounded-xl flex items-center gap-3 border border-emerald-100/20 hover:shadow-md transition-all">
+                  <div className="bg-emerald-100/50 p-2 rounded-lg">
+                    <MapPin className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <span className="text-sm text-emerald-600 font-medium block">Location</span>
+                    <span className="text-gray-700">{user.location}</span>
+                  </div>
                 </div>
               )}
             </div>
-            
-            <div className="space-y-3">
+
+            <div className="space-y-4">
+              {user.email && (
+                <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/50 p-4 rounded-xl flex items-center gap-3 border border-amber-100/20 hover:shadow-md transition-all">
+                  <div className="bg-amber-100/50 p-2 rounded-lg">
+                    <Mail className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <span className="text-sm text-amber-600 font-medium block">Email</span>
+                    <span className="text-gray-700 break-all">{user.email}</span>
+                  </div>
+                </div>
+              )}
+
               {user.occupation && (
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Briefcase className="h-4 w-4 text-indigo-500" />
-                  <span className="font-medium">Occupation:</span>
-                  <span>{user.occupation}</span>
+                <div className="bg-gradient-to-br from-rose-50/50 to-pink-50/50 p-4 rounded-xl flex items-center gap-3 border border-rose-100/20 hover:shadow-md transition-all">
+                  <div className="bg-rose-100/50 p-2 rounded-lg">
+                    <Briefcase className="h-5 w-5 text-rose-600" />
+                  </div>
+                  <div>
+                    <span className="text-sm text-rose-600 font-medium block">Occupation</span>
+                    <span className="text-gray-700">{user.occupation}</span>
+                  </div>
                 </div>
               )}
-              
-              {user.personalityType && (
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Users className="h-4 w-4 text-indigo-500" />
-                  <span className="font-medium">Personality:</span>
-                  <span>{user.personalityType}</span>
+
+              {user.interests && user.interests.length > 0 && (
+                <div className="bg-gradient-to-br from-violet-50/50 to-purple-50/50 p-4 rounded-xl border border-violet-100/20 hover:shadow-md transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="bg-violet-100/50 p-2 rounded-lg">
+                      <Heart className="h-5 w-5 text-violet-600" />
+                    </div>
+                    <span className="text-sm text-violet-600 font-medium">Interests</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {user.interests.map((interest, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="secondary" 
+                        className="bg-white/50 text-violet-700 border border-violet-200/50 hover:bg-violet-50/50"
+                      >
+                        {interest}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
-              
-              <div className="flex items-center gap-2 text-gray-700">
-                <Mail className="h-4 w-4 text-indigo-500" />
-                <span className="font-medium">Email:</span>
-                <span>{user.email}</span>
-              </div>
             </div>
           </div>
         </CardContent>
       </Card>
-      
+
       {user.interests && user.interests.length > 0 && (
         <Card className="overflow-hidden border-teal-200">
           <div className="bg-gradient-to-r from-teal-50 to-green-50 px-6 py-4">
@@ -170,7 +206,7 @@ const UserInfo: React.FC<UserProps> = ({ user, isCurrentUser }) => {
           </CardContent>
         </Card>
       )}
-      
+
       <Card className="overflow-hidden border-amber-200">
         <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-6 py-4">
           <h3 className="text-lg font-semibold text-amber-800 flex items-center">
