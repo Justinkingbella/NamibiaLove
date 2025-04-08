@@ -8,5 +8,6 @@
   },
   "variant": "default",
   "radius": 0.5,
-  "primary": "hsl(346, 100%, 58%)"
+  "primary": "hsl(346, 100%, 58%)",
+  "appearance": "light"
 }
