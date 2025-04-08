@@ -12,6 +12,7 @@ import Discover from "@/pages/discover";
 import Chat from "@/pages/chat";
 import ChatDetail from "@/pages/chat-detail";
 import Profile from "@/pages/profile";
+import ProfileEdit from "@/pages/profile-edit";
 import StoryView from "@/pages/story-view";
 import Booking from "@/pages/booking";
 import Matches from "@/pages/matches";
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/chat" component={Chat} />
       <Route path="/chat/:id" component={ChatDetail} />
       <Route path="/profile" component={Profile} />
+      <Route path="/profile/edit" component={ProfileEdit} />
       <Route path="/profile/:id" component={Profile} />
       <Route path="/story/:id" component={StoryView} />
       <Route path="/booking/:id" component={Booking} />

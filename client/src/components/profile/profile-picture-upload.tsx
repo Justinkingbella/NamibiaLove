@@ -1,11 +1,11 @@
-import { useState, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { apiRequest } from "@/lib/queryClient";
-import { toast } from "@/hooks/use-toast";
-import { Camera, Check, X } from "lucide-react";
-import { Spinner } from "@/components/ui/spinner"; 
+import React, { useState, useRef } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { Camera, Check, X } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { apiRequest } from '@/lib/queryClient';
 
 interface ProfilePictureUploadProps {
   currentImage?: string | null;
@@ -21,6 +21,7 @@ export function ProfilePictureUpload({
   const [isUploading, setIsUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   
   const getUserInitials = (username: string) => {
     return username.substring(0, 2).toUpperCase();
@@ -175,3 +176,5 @@ export function ProfilePictureUpload({
     </div>
   );
 }
+
+export default ProfilePictureUpload;
