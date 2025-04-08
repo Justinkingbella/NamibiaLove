@@ -33,9 +33,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   }
 
   return (
-    <div className="relative min-h-screen max-w-md mx-auto bg-white shadow-lg">
+    <div className="fixed inset-0 max-w-md mx-auto bg-white shadow-lg flex flex-col">
       {!hideHeader && <Header />}
-      <main className={`pb-20 ${hideBottomNav ? 'pb-0' : ''}`}>{children}</main>
+      <main className={`flex-1 overflow-y-auto ${hideBottomNav ? '' : 'pb-20'}`}>{children}</main>
       {!hideBottomNav && <BottomNav />}
     </div>
   );
