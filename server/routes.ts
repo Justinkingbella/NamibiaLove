@@ -15,6 +15,26 @@ import {
   insertEventAttendeeSchema,
   insertEventSchema
 } from "@shared/schema";
+import Stripe from "stripe";
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.warn('Missing STRIPE_SECRET_KEY - Stripe payment features will not work');
+}
+
+// Initialize Stripe and handle potential type issues with TypeScript
+let stripe: Stripe | undefined;
+try {
+  if (process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { 
+      apiVersion: "2023-10-16" as any 
+    });
+    console.log("Stripe initialized successfully");
+  } else {
+    console.warn("No Stripe secret key found");
+  }
+} catch (error) {
+  console.error("Failed to initialize Stripe:", error);
+}
 import { z } from "zod";
 import { ZodError } from "zod";
 import session from "express-session";
@@ -821,6 +841,291 @@ export async function registerRoutes(app: Express): Promise<Server> {
       handleValidationError(err, res);
     }
   });
+
+  // Stripe payment endpoints
+  if (stripe) {
+    // One-time payment route
+    app.post("/api/create-payment-intent", requireAuth, async (req, res) => {
+      try {
+        const { planType } = req.body;
+        let amount = 999; // Default $9.99
+        
+        if (planType === 'yearly') {
+          amount = 8999; // $89.99 for yearly
+        }
+        
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          metadata: {
+            userId: req.session.userId?.toString(),
+            planType: planType || 'monthly',
+            type: 'one-time'
+          }
+        });
+        
+        res.json({ clientSecret: paymentIntent.client_secret });
+      } catch (error: any) {
+        console.error('Payment intent error:', error);
+        res
+          .status(500)
+          .json({ message: "Error creating payment intent: " + error.message });
+      }
+    });
+
+    // Subscription route
+    app.post('/api/get-or-create-subscription', requireAuth, async (req, res) => {
+      try {
+        const userId = req.session.userId!;
+        const user = await storage.getUser(userId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        // If user already has a stripeCustomerId and stripeSubscriptionId, check subscription status
+        if (user.stripeCustomerId && user.stripeSubscriptionId) {
+          try {
+            const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+            
+            // If subscription is active, return its info
+            if (subscription.status === 'active') {
+              return res.json({
+                subscriptionId: subscription.id,
+                status: subscription.status,
+                currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+              });
+            }
+            
+            // If subscription has a pending payment, return its client secret
+            if (subscription.latest_invoice?.payment_intent) {
+              const paymentIntent = await stripe.paymentIntents.retrieve(
+                subscription.latest_invoice.payment_intent as string
+              );
+              
+              return res.json({
+                subscriptionId: subscription.id,
+                clientSecret: paymentIntent.client_secret,
+                status: subscription.status,
+              });
+            }
+          } catch (error) {
+            // If the subscription doesn't exist anymore, continue to create a new one
+            console.error('Error retrieving subscription:', error);
+          }
+        }
+        
+        const { planType } = req.body;
+        let priceId;
+        
+        // In a real application, you would have actual price IDs from Stripe
+        // For this demo, we'll use placeholders
+        switch(planType) {
+          case 'basic':
+            priceId = 'price_basic_monthly'; // Replace with your actual price ID
+            break;
+          case 'premium':
+            priceId = 'price_premium_monthly'; // Replace with your actual price ID
+            break;
+          case 'vip':
+            priceId = 'price_vip_monthly'; // Replace with your actual price ID
+            break;
+          default:
+            priceId = 'price_basic_monthly'; // Default price ID
+        }
+
+        // If user doesn't have a Stripe customer ID, create one
+        let stripeCustomerId = user.stripeCustomerId;
+        if (!stripeCustomerId) {
+          const customer = await stripe.customers.create({
+            email: user.email,
+            name: user.fullName,
+            metadata: {
+              userId: user.id.toString(),
+            }
+          });
+          
+          // Update user with new Stripe customer ID
+          stripeCustomerId = customer.id;
+          await storage.updateStripeCustomerId(user.id, customer.id);
+        }
+
+        // Create a new subscription with a trial period for demo purposes
+        // In production, you would use actual price IDs and no automatic trial
+        const subscription = await stripe.subscriptions.create({
+          customer: stripeCustomerId,
+          items: [{
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan`,
+              },
+              unit_amount: planType === 'basic' ? 999 : planType === 'premium' ? 1999 : 2999,
+              recurring: {
+                interval: 'month',
+              },
+            },
+          }],
+          payment_behavior: 'default_incomplete',
+          payment_settings: { save_default_payment_method: 'on_subscription' },
+          expand: ['latest_invoice.payment_intent'],
+          trial_period_days: 7, // 7-day trial period
+          metadata: {
+            userId: user.id.toString(),
+            planType: planType || 'basic'
+          }
+        });
+
+        // Update user with subscription ID
+        await storage.updateStripeSubscriptionId(user.id, subscription.id);
+        
+        // Get the client secret from the invoice payment intent
+        const invoice = subscription.latest_invoice as any;
+        const paymentIntent = invoice.payment_intent as any;
+        
+        res.json({
+          subscriptionId: subscription.id,
+          clientSecret: paymentIntent.client_secret,
+          trialEnd: new Date(subscription.trial_end! * 1000).toISOString(),
+        });
+      } catch (error: any) {
+        console.error('Subscription error:', error);
+        res.status(500).json({ 
+          message: "Error creating subscription", 
+          error: error.message 
+        });
+      }
+    });
+
+    // Get user subscription status
+    app.get('/api/user/subscription', requireAuth, async (req, res) => {
+      try {
+        const userId = req.session.userId!;
+        const user = await storage.getUser(userId);
+        
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        if (!user.stripeSubscriptionId) {
+          return res.json({ hasSubscription: false });
+        }
+
+        try {
+          const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+          
+          res.json({
+            hasSubscription: true,
+            status: subscription.status,
+            plan: subscription.metadata.planType || 'basic',
+            currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
+            currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+            nextBillingDate: new Date(subscription.current_period_end * 1000).toLocaleDateString(),
+            trialEnd: subscription.trial_end 
+              ? new Date(subscription.trial_end * 1000).toISOString() 
+              : null,
+          });
+        } catch (error) {
+          // If subscription can't be retrieved, user doesn't have an active subscription
+          return res.json({ hasSubscription: false });
+        }
+      } catch (error: any) {
+        console.error('Error fetching subscription:', error);
+        res.status(500).json({ 
+          message: "Error fetching subscription", 
+          error: error.message 
+        });
+      }
+    });
+
+    // Stripe webhook handler to process events
+    app.post('/api/webhook', async (req, res) => {
+      try {
+        const event = req.body; // In production, verify webhook signature
+        
+        // Handle the event
+        switch (event.type) {
+          case 'payment_intent.succeeded':
+            const paymentIntent = event.data.object;
+            // Handle successful one-time payment
+            if (paymentIntent.metadata?.type === 'one-time' && paymentIntent.metadata?.userId) {
+              const userId = parseInt(paymentIntent.metadata.userId);
+              if (!isNaN(userId)) {
+                // Update user with premium status until a certain date
+                const expirationDate = new Date();
+                expirationDate.setDate(expirationDate.getDate() + 30); // 30 days for monthly
+                
+                if (paymentIntent.metadata.planType === 'yearly') {
+                  expirationDate.setDate(expirationDate.getDate() + 335); // Add the rest of the year
+                }
+                
+                await storage.updatePremiumStatus(userId, true, expirationDate);
+              }
+            }
+            break;
+            
+          case 'invoice.payment_succeeded':
+            const invoice = event.data.object;
+            // Handle successful subscription payment
+            if (invoice.subscription) {
+              const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+              const userId = parseInt(subscription.metadata?.userId);
+              
+              if (!isNaN(userId)) {
+                // Update user with active subscription status
+                await storage.updatePremiumStatus(userId, true);
+              }
+            }
+            break;
+            
+          case 'customer.subscription.updated':
+          case 'customer.subscription.deleted':
+            const subscription = event.data.object;
+            const userId = parseInt(subscription.metadata?.userId);
+            
+            if (!isNaN(userId)) {
+              // Update user's subscription status based on the subscription status
+              const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+              await storage.updatePremiumStatus(userId, isActive);
+            }
+            break;
+            
+          default:
+            console.log(`Unhandled event type ${event.type}`);
+        }
+        
+        res.json({ received: true });
+      } catch (err: any) {
+        console.error('Webhook error:', err.message);
+        res.status(400).send(`Webhook Error: ${err.message}`);
+      }
+    });
+  } else {
+    // Stripe not configured - add stub routes for development
+    console.warn("Stripe not configured - payment features will be unavailable");
+    
+    app.post("/api/create-payment-intent", requireAuth, (req, res) => {
+      res.status(503).json({ 
+        error: true,
+        message: "Stripe not configured - payment features unavailable" 
+      });
+    });
+    
+    app.post('/api/get-or-create-subscription', requireAuth, (req, res) => {
+      res.status(503).json({ 
+        error: true,
+        message: "Stripe not configured - subscription features unavailable" 
+      });
+    });
+    
+    app.get('/api/user/subscription', requireAuth, (req, res) => {
+      res.json({ 
+        error: true,
+        hasSubscription: false, 
+        message: "Stripe not configured - subscription features unavailable" 
+      });
+    });
+  }
 
   // Event routes
   app.get('/api/events', requireAuth, async (req, res) => {

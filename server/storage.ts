@@ -20,6 +20,9 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
+  updateStripeCustomerId(id: number, stripeCustomerId: string): Promise<User | undefined>;
+  updateStripeSubscriptionId(id: number, stripeSubscriptionId: string): Promise<User | undefined>;
+  updatePremiumStatus(id: number, isPremium: boolean, expiresAt?: Date): Promise<User | undefined>;
   listUsers(): Promise<User[]>;
   
   // Match methods
@@ -788,6 +791,39 @@ export class DatabaseStorage implements IStorage {
     const [updatedUser] = await db
       .update(users)
       .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
+
+  async updateStripeCustomerId(id: number, stripeCustomerId: string): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ stripeCustomerId })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
+  
+  async updateStripeSubscriptionId(id: number, stripeSubscriptionId: string): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ stripeSubscriptionId })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
+  
+  async updatePremiumStatus(id: number, isPremium: boolean, expiresAt?: Date): Promise<User | undefined> {
+    const updateData: { isPremium: boolean, premiumExpiresAt?: Date } = { isPremium };
+    
+    if (expiresAt) {
+      updateData.premiumExpiresAt = expiresAt;
+    }
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set(updateData)
       .where(eq(users.id, id))
       .returning();
     return updatedUser || undefined;

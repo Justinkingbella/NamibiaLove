@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, primaryKey, doublePrecision, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -14,9 +14,17 @@ export const users = pgTable("users", {
   age: integer("age"),
   gender: text("gender"),
   location: text("location"),
+  latitude: doublePrecision("latitude"),
+  longitude: doublePrecision("longitude"),
   occupation: text("occupation"),
   profilePicture: text("profile_picture"),
   interests: text("interests").array(),
+  personalityType: text("personality_type"),
+  avatarData: json("avatar_data"),
+  subscriptionTier: text("subscription_tier").default("free"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  pushToken: text("push_token"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -89,10 +97,16 @@ export const events = pgTable("events", {
   title: text("title").notNull(),
   description: text("description"),
   location: text("location").notNull(),
+  latitude: doublePrecision("latitude"),
+  longitude: doublePrecision("longitude"),
   date: timestamp("date").notNull(),
   imageUrl: text("image_url"),
   createdBy: integer("created_by").notNull(),
   eventType: text("event_type").notNull(), // dating, social, etc.
+  capacity: integer("capacity"),
+  isFeatured: boolean("is_featured").default(false),
+  isVirtual: boolean("is_virtual").default(false),
+  videoCallUrl: text("video_call_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -114,6 +128,70 @@ export const eventAttendees = pgTable("event_attendees", {
   eventId: integer("event_id").notNull(),
   userId: integer("user_id").notNull(),
   status: text("status").notNull(), // going, maybe, not going
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Ice breaker suggestions table
+export const iceBreakers = pgTable("ice_breakers", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  category: text("category").notNull(), // funny, deep, random, flirty, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Personality quiz questions table
+export const personalityQuizQuestions = pgTable("personality_quiz_questions", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  options: json("options").notNull(), // Array of options
+  category: text("category").notNull(), // personality, compatibility, interests, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Personality quiz answers table
+export const personalityQuizAnswers = pgTable("personality_quiz_answers", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  questionId: integer("question_id").notNull(),
+  answer: text("answer").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Video chat sessions table
+export const videoChatSessions = pgTable("video_chat_sessions", {
+  id: serial("id").primaryKey(),
+  user1Id: integer("user1_id").notNull(),
+  user2Id: integer("user2_id").notNull(),
+  status: text("status").notNull(), // requested, accepted, declined, completed
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
+  sessionToken: text("session_token"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Subscription plans table
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  price: integer("price").notNull(), // in cents
+  currency: text("currency").default("USD").notNull(),
+  interval: text("interval").notNull(), // month, year, etc.
+  features: json("features").notNull(), // Array of features
+  stripeProductId: text("stripe_product_id"),
+  stripePriceId: text("stripe_price_id"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Push notification table
+export const pushNotifications = pgTable("push_notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  data: json("data"),
+  isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -173,6 +251,36 @@ export const insertEventAttendeeSchema = createInsertSchema(eventAttendees).omit
   createdAt: true,
 });
 
+export const insertIceBreakerSchema = createInsertSchema(iceBreakers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPersonalityQuizQuestionSchema = createInsertSchema(personalityQuizQuestions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPersonalityQuizAnswerSchema = createInsertSchema(personalityQuizAnswers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVideoChatSessionSchema = createInsertSchema(videoChatSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPushNotificationSchema = createInsertSchema(pushNotifications).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -207,6 +315,24 @@ export type DateBooking = typeof dateBookings.$inferSelect;
 export type InsertEventAttendee = z.infer<typeof insertEventAttendeeSchema>;
 export type EventAttendee = typeof eventAttendees.$inferSelect;
 
+export type InsertIceBreaker = z.infer<typeof insertIceBreakerSchema>;
+export type IceBreaker = typeof iceBreakers.$inferSelect;
+
+export type InsertPersonalityQuizQuestion = z.infer<typeof insertPersonalityQuizQuestionSchema>;
+export type PersonalityQuizQuestion = typeof personalityQuizQuestions.$inferSelect;
+
+export type InsertPersonalityQuizAnswer = z.infer<typeof insertPersonalityQuizAnswerSchema>;
+export type PersonalityQuizAnswer = typeof personalityQuizAnswers.$inferSelect;
+
+export type InsertVideoChatSession = z.infer<typeof insertVideoChatSessionSchema>;
+export type VideoChatSession = typeof videoChatSessions.$inferSelect;
+
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+
+export type InsertPushNotification = z.infer<typeof insertPushNotificationSchema>;
+export type PushNotification = typeof pushNotifications.$inferSelect;
+
 // Define relations
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
@@ -221,6 +347,10 @@ export const usersRelations = relations(users, ({ many }) => ({
   eventAttendees: many(eventAttendees),
   sentDateRequests: many(dateBookings, { relationName: "requester" }),
   receivedDateRequests: many(dateBookings, { relationName: "recipient" }),
+  personalityQuizAnswers: many(personalityQuizAnswers),
+  videoChatSessions1: many(videoChatSessions, { relationName: "user1" }),
+  videoChatSessions2: many(videoChatSessions, { relationName: "user2" }),
+  pushNotifications: many(pushNotifications),
 }));
 
 export const matchesRelations = relations(matches, ({ one }) => ({
@@ -324,6 +454,41 @@ export const eventAttendeesRelations = relations(eventAttendees, ({ one }) => ({
   }),
   user: one(users, {
     fields: [eventAttendees.userId],
+    references: [users.id],
+  }),
+}));
+
+export const personalityQuizAnswersRelations = relations(personalityQuizAnswers, ({ one }) => ({
+  user: one(users, {
+    fields: [personalityQuizAnswers.userId],
+    references: [users.id],
+  }),
+  question: one(personalityQuizQuestions, {
+    fields: [personalityQuizAnswers.questionId],
+    references: [personalityQuizQuestions.id],
+  }),
+}));
+
+export const personalityQuizQuestionsRelations = relations(personalityQuizQuestions, ({ many }) => ({
+  answers: many(personalityQuizAnswers),
+}));
+
+export const videoChatSessionsRelations = relations(videoChatSessions, ({ one }) => ({
+  user1: one(users, {
+    fields: [videoChatSessions.user1Id],
+    references: [users.id],
+    relationName: "user1",
+  }),
+  user2: one(users, {
+    fields: [videoChatSessions.user2Id],
+    references: [users.id],
+    relationName: "user2",
+  }),
+}));
+
+export const pushNotificationsRelations = relations(pushNotifications, ({ one }) => ({
+  user: one(users, {
+    fields: [pushNotifications.userId],
     references: [users.id],
   }),
 }));

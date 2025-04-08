@@ -40,17 +40,20 @@ interface Post {
   userLiked: boolean;
 }
 
-interface ProfileProps {
+import { RouteComponentProps } from 'wouter';
+
+interface ProfileProps extends RouteComponentProps<{ id?: string }> {
   isCurrentUser?: boolean;
 }
 
-const Profile: React.FC<ProfileProps> = ({ isCurrentUser: propIsCurrentUser }) => {
-  const [match, params] = useRoute<{ id: string }>('/profile/:id');
+const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: propIsCurrentUser }) => {
+  const [match, useRouteParams] = useRoute<{ id: string }>('/profile/:id');
   const { user: currentUser, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   
   // If no ID is provided, show current user's profile
-  const userId = match ? parseInt(params.id) : currentUser?.id;
+  const userId = match && useRouteParams.id ? parseInt(useRouteParams.id) : 
+    routeParams?.id ? parseInt(routeParams.id) : currentUser?.id;
   const isCurrentUser = propIsCurrentUser !== undefined 
     ? propIsCurrentUser 
     : userId === currentUser?.id;
