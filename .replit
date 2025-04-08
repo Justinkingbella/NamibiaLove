@@ -48,4 +48,4 @@ mode = "parallel"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd client && PORT=3000 npm run dev & cd server && npm run dev"
+args = "cd server && npm run dev & cd client && PORT=3000 npm run dev"
