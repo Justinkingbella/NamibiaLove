@@ -22,8 +22,8 @@ const BottomNav: React.FC = () => {
     {
       icon: Heart,
       label: '',
-      href: '/discover',
-      active: false,
+      href: '/matches',
+      active: location === '/matches',
       special: true,
     },
     {

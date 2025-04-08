@@ -14,6 +14,8 @@ import ChatDetail from "@/pages/chat-detail";
 import Profile from "@/pages/profile";
 import StoryView from "@/pages/story-view";
 import Booking from "@/pages/booking";
+import Matches from "@/pages/matches";
+import Onboarding from "@/pages/onboarding";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -31,6 +33,8 @@ function Router() {
       <Route path="/profile/:id" component={Profile} />
       <Route path="/story/:id" component={StoryView} />
       <Route path="/booking/:id" component={Booking} />
+      <Route path="/matches" component={Matches} />
+      <Route path="/onboarding" component={Onboarding} />
       <Route component={NotFound} />
     </Switch>
   );
