@@ -5,5 +5,8 @@
   "colors": {
     "background": "#000000",
     "foreground": "#ffffff"
-  }
+  },
+  "variant": "default",
+  "radius": 0.5,
+  "primary": "hsl(346, 100%, 58%)"
 }
