@@ -15,7 +15,19 @@ import {
   insertEventAttendeeSchema,
   insertEventSchema
 } from "@shared/schema";
+import multer from "multer";
+import path from "path";
+import fs from "fs-extra";
 import Stripe from "stripe";
+import session from "express-session";
+import { SessionData } from "express-session";
+
+// Extend the Express session types to include our userId property
+declare module "express-session" {
+  interface SessionData {
+    userId: number;
+  }
+}
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Missing STRIPE_SECRET_KEY - Stripe payment features will not work');
@@ -35,9 +47,7 @@ try {
 } catch (error) {
   console.error("Failed to initialize Stripe:", error);
 }
-import { z } from "zod";
-import { ZodError } from "zod";
-import session from "express-session";
+import { z, ZodError } from "zod";
 import MemoryStore from "memorystore";
 import { formatISO } from "date-fns";
 
@@ -286,6 +296,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userWithoutPassword);
     } catch (err) {
       handleValidationError(err, res);
+    }
+  });
+  
+  // Configure multer for file uploads
+  const storage_engine = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = './uploads/profile-pictures';
+      fs.ensureDirSync(dir); // Create directory if it doesn't exist
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+      const userId = req.session.userId;
+      const ext = path.extname(file.originalname).toLowerCase();
+      const filename = `user_${userId}_${Date.now()}${ext}`;
+      cb(null, filename);
+    }
+  });
+  
+  const upload = multer({
+    storage: storage_engine,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['.jpg', '.jpeg', '.png', '.gif'];
+      const ext = path.extname(file.originalname).toLowerCase();
+      
+      if (!allowedTypes.includes(ext)) {
+        return cb(new Error('Only image files are allowed!'));
+      }
+      cb(null, true);
+    }
+  });
+  
+  // Profile picture upload route
+  app.post('/api/users/profile-picture', requireAuth, upload.single('profilePicture'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "No file uploaded" });
+      }
+      
+      const userId = req.session.userId as number;
+      const filePath = `/uploads/profile-pictures/${req.file.filename}`;
+      
+      // Update user profile with new picture URL
+      const updatedUser = await storage.updateUser(userId, {
+        profilePicture: filePath
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+      
+      // Return success
+      res.json({ 
+        success: true, 
+        message: "Profile picture updated",
+        profilePicture: filePath
+      });
+    } catch (err) {
+      console.error("Profile picture upload error:", err);
+      res.status(500).json({ success: false, message: err instanceof Error ? err.message : "Upload failed" });
     }
   });
 

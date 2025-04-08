@@ -8,6 +8,7 @@ import Avatar3D from '@/components/profile/avatar-3d';
 import MessageSettings from '@/components/profile/message-settings';
 import NicknameManager from '@/components/profile/nickname-manager';
 import SubscriptionStatus from '@/components/profile/subscription-status';
+import { ProfilePictureUpload } from '@/components/profile/profile-picture-upload';
 import PostCard from '@/components/posts/post-card';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { API_ENDPOINTS } from '@/lib/constants';
@@ -161,7 +162,7 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
   return (
     <MainLayout>
       {/* Navigation header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-violet-500 py-4 px-4 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-rose-500 to-fuchsia-500 py-4 px-4 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-20">
           <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/10 blur-xl"></div>
           <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
@@ -208,110 +209,112 @@ const Profile: React.FC<ProfileProps> = ({ params: routeParams, isCurrentUser: p
       </div>
       
       <div className="px-4 py-6 bg-[#FAF7F2] relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent opacity-60"></div>
-        
         {/* Profile header with avatar and basic info */}
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
-          <div className="relative">
-            <div className="rounded-full p-1 bg-gradient-to-r from-indigo-400 to-purple-400">
-              <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
-                <AvatarImage 
-                  src={profileUser.profilePicture} 
-                  alt={profileUser.fullName} 
-                  className="object-cover"
-                />
-                <AvatarFallback className="text-3xl bg-gradient-to-r from-indigo-200 to-purple-200 text-indigo-700">
-                  {getInitials(profileUser.fullName)}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-            
-            {isCurrentUser && (
-              <Button 
-                size="icon" 
-                variant="outline" 
-                className="absolute -bottom-2 -right-2 h-10 w-10 rounded-full bg-white hover:bg-gray-100 shadow-md border-indigo-200"
-                onClick={() => {
-                  alert('Upload photo feature coming soon!');
-                }}
-              >
-                <Edit className="h-4 w-4 text-indigo-600" />
-              </Button>
-            )}
-            
-            {profileUser.isPremium && (
-              <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-full p-1.5">
-                <Crown className="h-5 w-5" />
-              </div>
-            )}
-          </div>
-          
-          <div className="flex-1 text-center md:text-left">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div>
-                <h1 className="text-2xl font-bold font-sans text-gray-800 flex items-center justify-center md:justify-start">
-                  {profileUser.fullName}
-                  {profileUser.isPremium && (
-                    <Badge className="ml-2 bg-gradient-to-r from-yellow-500 to-amber-500 border-none">
-                      <Crown className="h-3 w-3 mr-1" /> Premium
-                    </Badge>
-                  )}
-                </h1>
-                <div className="text-gray-600 text-sm mt-1 flex items-center justify-center md:justify-start">
-                  @{profileUser.username}
-                  {profileUser.location && (
-                    <>
-                      <span className="mx-1">•</span>
-                      {profileUser.location}
-                    </>
-                  )}
+        <div className="max-w-2xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
+            <div className="relative">
+              {isCurrentUser ? (
+                <div className="rounded-full p-1 bg-gradient-to-r from-pink-400 to-purple-400">
+                  <ProfilePictureUpload
+                    currentImage={profileUser.profilePicture}
+                    username={profileUser.username}
+                    onImageUpdated={(newImageUrl) => {
+                      // Invalidate user query to refresh profile
+                      queryClient.invalidateQueries({ 
+                        queryKey: [API_ENDPOINTS.USERS.DETAIL(userId || 0)] 
+                      });
+                    }}
+                  />
                 </div>
-              </div>
+              ) : (
+                <div className="rounded-full p-1 bg-gradient-to-r from-pink-400 to-purple-400">
+                  <Avatar className="h-28 w-28 border-4 border-white shadow-lg">
+                    <AvatarImage 
+                      src={profileUser.profilePicture} 
+                      alt={profileUser.fullName} 
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-3xl bg-gradient-to-r from-pink-200 to-purple-200 text-pink-700">
+                      {getInitials(profileUser.fullName)}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              )}
               
-              {!isCurrentUser && (
-                <div className="mt-4 md:mt-0">
-                  <Button 
-                    variant={followStatus?.following ? "outline" : "default"}
-                    className={followStatus?.following 
-                      ? "bg-white hover:bg-gray-100 text-gray-800 border-indigo-200" 
-                      : "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
-                    }
-                    onClick={handleFollowToggle}
-                    disabled={followStatusLoading || followMutation.isPending}
-                  >
-                    {followMutation.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        {followStatus?.following ? (
-                          <UserMinus className="mr-2 h-4 w-4" />
-                        ) : (
-                          <UserPlus className="mr-2 h-4 w-4" />
-                        )}
-                      </>
-                    )}
-                    {followStatus?.following ? "Following" : "Follow"}
-                  </Button>
+              {profileUser.isPremium && (
+                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-full p-1.5">
+                  <Crown className="h-5 w-5" />
                 </div>
               )}
             </div>
             
-            {profileUser.bio && (
-              <p className="mt-3 text-gray-600 max-w-md leading-relaxed">{profileUser.bio}</p>
-            )}
-            
-            <div className="flex justify-center md:justify-start space-x-10 mt-5">
-              <div className="text-center">
-                <div className="font-bold text-gray-800 text-lg">120</div>
-                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Posts</div>
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold font-sans text-gray-800 flex items-center justify-center md:justify-start">
+                    {profileUser.fullName}
+                    {profileUser.isPremium && (
+                      <Badge className="ml-2 bg-gradient-to-r from-yellow-500 to-amber-500 border-none">
+                        <Crown className="h-3 w-3 mr-1" /> Premium
+                      </Badge>
+                    )}
+                  </h1>
+                  <div className="text-gray-600 text-sm mt-1 flex items-center justify-center md:justify-start">
+                    @{profileUser.username}
+                    {profileUser.location && (
+                      <>
+                        <span className="mx-1">•</span>
+                        {profileUser.location}
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                {!isCurrentUser && (
+                  <div className="mt-4 md:mt-0">
+                    <Button 
+                      variant={followStatus?.following ? "outline" : "default"}
+                      className={followStatus?.following 
+                        ? "bg-white hover:bg-gray-100 text-gray-800 border-pink-200" 
+                        : "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md"
+                      }
+                      onClick={handleFollowToggle}
+                      disabled={followStatusLoading || followMutation.isPending}
+                    >
+                      {followMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          {followStatus?.following ? (
+                            <UserMinus className="mr-2 h-4 w-4" />
+                          ) : (
+                            <UserPlus className="mr-2 h-4 w-4" />
+                          )}
+                        </>
+                      )}
+                      {followStatus?.following ? "Following" : "Follow"}
+                    </Button>
+                  </div>
+                )}
               </div>
-              <div className="text-center">
-                <div className="font-bold text-gray-800 text-lg">856</div>
-                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Followers</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-gray-800 text-lg">267</div>
-                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Following</div>
+              
+              {profileUser.bio && (
+                <p className="mt-3 text-gray-600 max-w-md leading-relaxed">{profileUser.bio}</p>
+              )}
+              
+              <div className="flex justify-center md:justify-start space-x-12 mt-5">
+                <div className="text-center">
+                  <div className="font-bold text-gray-800 text-lg">120</div>
+                  <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Posts</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-gray-800 text-lg">856</div>
+                  <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Followers</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-gray-800 text-lg">267</div>
+                  <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Following</div>
+                </div>
               </div>
             </div>
           </div>

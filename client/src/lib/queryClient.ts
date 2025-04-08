@@ -11,11 +11,27 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  isFormData = false
 ): Promise<Response> {
+  // Set appropriate headers and body based on the content type
+  let headers = {};
+  let body: any = undefined;
+  
+  if (data) {
+    if (isFormData) {
+      // If it's FormData, don't set Content-Type (browser will set it with boundary)
+      body = data;
+    } else {
+      // For JSON data
+      headers = { "Content-Type": "application/json" };
+      body = JSON.stringify(data);
+    }
+  }
+  
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers,
+    body,
     credentials: "include",
   });
 
