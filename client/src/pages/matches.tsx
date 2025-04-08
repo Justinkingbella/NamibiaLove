@@ -40,32 +40,48 @@ const MatchesPage: React.FC = () => {
   });
 
   // Fetch potential matches
-  const { data: allUsers, isLoading: matchesLoading } = useQuery<User[]>({
+  const { data: potentialMatches, isLoading: matchesLoading } = useQuery<User[]>({
     queryKey: ['potential-matches'],
     queryFn: async () => {
+      if (!user) return [];
+
       const [usersResponse, matchesResponse] = await Promise.all([
         apiRequest('GET', API_ENDPOINTS.USERS.LIST),
         apiRequest('GET', API_ENDPOINTS.MATCHES.LIST)
       ]);
 
-      // Get already matched/liked user IDs
+      // Get all matched user IDs (both liked and matched)
       const matchedUserIds = new Set(
         Array.isArray(matchesResponse) ? 
-          matchesResponse.map(match => 
-            match.userId1 === user?.id ? match.userId2 : match.userId1
-          ) : []
+          matchesResponse
+            .filter(match => match.userId1 === user.id || match.userId2 === user.id)
+            .map(match => match.userId1 === user.id ? match.userId2 : match.userId1)
+          : []
       );
 
-      // Filter out current user and already matched users
-      return Array.isArray(usersResponse) ? 
+      // Filter users to show only those not yet matched
+      const validUsers = Array.isArray(usersResponse) ? 
         usersResponse.filter((u: User) => 
-          u.id !== user?.id && !matchedUserIds.has(u.id)
+          // Exclude current user
+          u.id !== user.id && 
+          // Exclude already matched/liked users
+          !matchedUserIds.has(u.id) &&
+          // Make sure user has required fields
+          u.fullName && 
+          // Add any additional filtering criteria here
+          true
         ) : [];
+
+      // Sort users by match criteria (simple example)
+      return validUsers.sort((a, b) => {
+        // Sort by completeness of profile
+        const scoreA = (a.profilePicture ? 1 : 0) + (a.bio ? 1 : 0) + (a.interests?.length ? 1 : 0);
+        const scoreB = (b.profilePicture ? 1 : 0) + (b.bio ? 1 : 0) + (b.interests?.length ? 1 : 0);
+        return scoreB - scoreA;
+      });
     },
     enabled: !!user,
   });
-
-  const potentialMatches = allUsers;
 
   // Create match mutation
   const createMatchMutation = useMutation({
