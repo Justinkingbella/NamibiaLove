@@ -26,7 +26,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
   
   return (
-    <div className="bg-white p-2 shadow-md border-t border-gray-100">
+    <div className="bg-white p-1.5 shadow-md border-t border-gray-100">
       <div className="flex items-center gap-2">
         {isRecording ? (
           <div className="flex-1 voice-message">
@@ -41,7 +41,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             <Input
               type="text"
               placeholder="Message..."
-              className="w-full rounded-full px-4 py-3 focus-visible:ring-1 focus-visible:ring-primary border-gray-100 bg-white shadow-sm pl-10"
+              className="w-full rounded-full px-4 py-2.5 focus-visible:ring-1 focus-visible:ring-primary border-gray-100 bg-white shadow-sm pl-10"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               onKeyDown={(e) => {

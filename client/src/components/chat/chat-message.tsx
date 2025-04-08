@@ -32,7 +32,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, otherUser, isCurrent
 
   return (
     <motion.div 
-      className={`flex mb-2.5 ${isCurrentUser ? 'justify-end' : ''}`}
+      className={`flex mb-1.5 ${isCurrentUser ? 'justify-end' : ''}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}

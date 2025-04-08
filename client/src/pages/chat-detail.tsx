@@ -206,7 +206,7 @@ const ChatDetail: React.FC = () => {
         <div className="bg-gray-50 flex-1 overflow-hidden">
           <div 
             ref={chatContainerRef}
-            className="p-4 h-full overflow-y-auto pb-2"
+            className="p-4 h-full overflow-y-auto pb-0"
           >
             {messagesLoading ? (
               <div className="flex justify-center items-center h-full">
@@ -236,13 +236,13 @@ const ChatDetail: React.FC = () => {
                     ))}
                     
                     {isTyping && (
-                      <div className="flex mb-2.5">
+                      <div className="flex mb-0">
                         <Avatar className="w-8 h-8 mr-2 self-end">
                           <AvatarImage src={otherUser.profilePicture} alt={otherUser.fullName} />
                           <AvatarFallback>{getInitials(otherUser.fullName)}</AvatarFallback>
                         </Avatar>
-                        <div className="bg-gray-100 text-gray-800 rounded-full rounded-tl-sm px-4 py-2.5 shadow-sm inline-flex">
-                          <div className="flex space-x-1 py-1">
+                        <div className="bg-gray-100 text-gray-800 rounded-full rounded-tl-sm px-4 py-2 shadow-sm inline-flex">
+                          <div className="flex space-x-1">
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
@@ -269,15 +269,13 @@ const ChatDetail: React.FC = () => {
           </div>
         </div>
         
-        <div className="mt-auto">
-          <MessageInput
-            value={newMessage}
-            onChange={handleInputChange}
-            onSend={handleSendMessage}
-            disabled={sendMessageMutation.isPending}
-            isLoading={sendMessageMutation.isPending}
-          />
-        </div>
+        <MessageInput
+          value={newMessage}
+          onChange={handleInputChange}
+          onSend={handleSendMessage}
+          disabled={sendMessageMutation.isPending}
+          isLoading={sendMessageMutation.isPending}
+        />
       </div>
     </MainLayout>
   );
