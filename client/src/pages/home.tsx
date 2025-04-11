@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/main-layout';
 import StoryCircles from '@/components/stories/story-circles';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import TopPicks from '@/components/match/top-picks';
 import EventList from '@/components/events/event-list';
 import PostCard from '@/components/posts/post-card';
+import CreatePost from '@/components/posts/create-post';
 import MatchCard from '@/components/match/match-card';
 import ModalDialog from '@/components/common/modal';
 import { useQuery } from '@tanstack/react-query';
