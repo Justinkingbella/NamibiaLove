@@ -35,14 +35,7 @@ interface Post {
   userLiked: boolean;
 }
 
-const CreatePost = () => {
-  return (
-    <div className="p-4 bg-white rounded-lg shadow-md">
-      <textarea placeholder="Create your post here..." className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" />
-      <button className="mt-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg">Post</button>
-    </div>
-  );
-};
+
 
 
 const Home: React.FC = () => {
