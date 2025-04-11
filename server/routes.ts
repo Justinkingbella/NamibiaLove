@@ -214,15 +214,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(401).json({ message: "Invalid username or password" });
         }
       
-      // Set session
-      req.session.userId = user.id;
-      
-      // Return user without password
-      const { password, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-    } catch (err) {
-      handleValidationError(err, res);
-    }
+        // Set session
+        req.session.userId = user.id;
+        
+        // Return user without password
+        const { password, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      } catch (err) {
+        handleValidationError(err, res);
+      }
   });
 
   app.post('/api/auth/logout', (req, res) => {
