@@ -37,7 +37,7 @@ const CreatePost = ({ post, isEditing, onClose }: CreatePostProps) => {
       );
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.POSTS.FEED] });
       setContent('');
       setImages([]);
@@ -47,6 +47,7 @@ const CreatePost = ({ post, isEditing, onClose }: CreatePostProps) => {
         description: isEditing ? "Your post has been updated successfully" : "Your post has been created successfully",
       });
       if (onClose) onClose();
+      return data;
     },
     onError: () => {
       toast({

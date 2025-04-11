@@ -121,14 +121,30 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
     setExpandedComments(!expandedComments);
   };
 
-  const handleDelete = async () => {
-    // Placeholder for delete functionality.  Replace with actual API call.
-    try {
-      await apiRequest('DELETE', API_ENDPOINTS.POSTS.DELETE(post.id));
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('DELETE', API_ENDPOINTS.POSTS.DELETE(post.id));
+      return response.json();
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.POSTS.FEED] });
-    } catch (error) {
-      console.error("Error deleting post:", error);
-      // Handle error appropriately (e.g., show error message)
+      toast({
+        title: "Post deleted",
+        description: "Your post has been deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete post. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleDelete = () => {
+    if (!deleteMutation.isPending) {
+      deleteMutation.mutate();
     }
   };
 
