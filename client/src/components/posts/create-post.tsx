@@ -144,13 +144,8 @@ const CreatePost = ({ post, isEditing, onClose }: CreatePostProps) => {
 
   return (
     <div className="w-full">
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create Post</DialogTitle>
-        </DialogHeader>
-        <PostForm />
-      </DialogContent>
-    </Dialog>
+      <PostForm />
+    </div>
   );
 };
 

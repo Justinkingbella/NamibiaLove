@@ -35,9 +35,6 @@ interface Post {
   userLiked: boolean;
 }
 
-
-
-
 const Home: React.FC = () => {
   const { user } = useAuth();
   const [matchedUser, setMatchedUser] = useState<User | null>(null);
@@ -136,8 +133,8 @@ const Home: React.FC = () => {
                       <DialogTitle>Create New Post</DialogTitle>
                     </DialogHeader>
                     <CreatePost />
-                </DialogContent>
-              </Dialog>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               <div className="space-y-6">
