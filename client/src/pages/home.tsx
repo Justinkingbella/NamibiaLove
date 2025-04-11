@@ -129,10 +129,23 @@ const Home: React.FC = () => {
             <div className="px-4 py-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold font-sans">Latest Posts</h2>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="bg-gradient-to-r from-pink-500 to-purple-500 text-white">
+                      Create Post
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Post</DialogTitle>
+                    </DialogHeader>
+                    <CreatePost />
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
               </div>
 
               <div className="space-y-6">
-                <CreatePost />
                 {posts?.map((post) => (
                   <PostCard key={post.id} post={post} />
                 ))}

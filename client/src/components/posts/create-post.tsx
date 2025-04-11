@@ -143,15 +143,7 @@ const CreatePost = ({ post, isEditing, onClose }: CreatePostProps) => {
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Card className="mb-6 p-4 cursor-pointer hover:bg-gray-50">
-          <div className="flex items-center space-x-2 text-gray-500">
-            <ImageIcon className="h-5 w-5" />
-            <span>Create a new post...</span>
-          </div>
-        </Card>
-      </DialogTrigger>
+    <div className="w-full">
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Post</DialogTitle>
