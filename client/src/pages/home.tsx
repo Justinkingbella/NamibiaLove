@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/main-layout';
 import StoryCircles from '@/components/stories/story-circles';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import TopPicks from '@/components/match/top-picks';
 import EventList from '@/components/events/event-list';
@@ -128,14 +128,12 @@ const Home: React.FC = () => {
                       Create Post
                     </Button>
                   </DialogTrigger>
-                  {(close) => (
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Create New Post</DialogTitle>
-                      </DialogHeader>
-                      <CreatePost onClose={close} />
-                    </DialogContent>
-                  )}
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Post</DialogTitle>
+                    </DialogHeader>
+                    <CreatePost onClose={() => document.querySelector('[data-state="open"]')?.querySelector('button[type="button"]')?.click()} />
+                  </DialogContent>
                 </Dialog>
               </div>
 
