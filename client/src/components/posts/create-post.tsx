@@ -46,7 +46,9 @@ const CreatePost = ({ post, isEditing, onClose }: CreatePostProps) => {
         title: isEditing ? "Post updated" : "Post created",
         description: isEditing ? "Your post has been updated successfully" : "Your post has been created successfully",
       });
-      if (onClose) onClose();
+      if (onClose) {
+        onClose();
+      }
       return data;
     },
     onError: () => {

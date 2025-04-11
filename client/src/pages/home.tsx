@@ -132,7 +132,12 @@ const Home: React.FC = () => {
                     <DialogHeader>
                       <DialogTitle>Create New Post</DialogTitle>
                     </DialogHeader>
-                    <CreatePost onClose={() => document.querySelector('[data-state="open"]')?.querySelector('button[type="button"]')?.click()} />
+                    <CreatePost onClose={() => {
+                      const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]');
+                      if (closeButton instanceof HTMLButtonElement) {
+                        closeButton.click();
+                      }
+                    }} />
                   </DialogContent>
                 </Dialog>
               </div>
