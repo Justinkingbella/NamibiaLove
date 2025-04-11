@@ -32,6 +32,16 @@ interface Post {
   userLiked: boolean;
 }
 
+const CreatePost = () => {
+  return (
+    <div className="p-4 bg-white rounded-lg shadow-md">
+      <textarea placeholder="Create your post here..." className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" />
+      <button className="mt-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg">Post</button>
+    </div>
+  );
+};
+
+
 const Home: React.FC = () => {
   const { user } = useAuth();
   const [matchedUser, setMatchedUser] = useState<User | null>(null);
@@ -120,24 +130,19 @@ const Home: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold font-sans">Latest Posts</h2>
               </div>
-              
-              {postsLoading ? (
-                <div className="flex justify-center p-6">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : (
-                <>
-                  {posts?.map(post => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-                  
-                  {!posts?.length && (
-                    <div className="text-center p-6 text-gray-500">
-                      No posts yet. Follow people to see their posts here!
-                    </div>
-                  )}
-                </>
-              )}
+
+              <div className="space-y-6">
+                <CreatePost />
+                {posts?.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+
+                {!posts?.length && (
+                  <div className="text-center p-6 text-gray-500">
+                    No posts yet. Follow people to see their posts here!
+                  </div>
+                )}
+              </div>
             </div>
           </TabsContent>
 
@@ -147,13 +152,13 @@ const Home: React.FC = () => {
               Switch to the Discover tab to explore more people
             </div>
           </TabsContent>
-          
+
           <TabsContent value="nearby">
             <div className="p-6 text-center text-gray-500">
               Find people near you in the Nearby tab
             </div>
           </TabsContent>
-          
+
           <TabsContent value="matches">
             <div className="p-6 text-center text-gray-500">
               Your matches will appear here
