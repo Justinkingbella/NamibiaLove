@@ -128,12 +128,14 @@ const Home: React.FC = () => {
                       Create Post
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Create New Post</DialogTitle>
-                    </DialogHeader>
-                    <CreatePost />
-                  </DialogContent>
+                  {(open) => (
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Post</DialogTitle>
+                      </DialogHeader>
+                      <CreatePost onClose={() => open(false)} />
+                    </DialogContent>
+                  )}
                 </Dialog>
               </div>
 

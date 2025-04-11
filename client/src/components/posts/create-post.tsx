@@ -42,6 +42,7 @@ const CreatePost = ({ post, isEditing, onClose }: CreatePostProps) => {
       setImages([]);
       setPreviewUrls([]);
       if (onClose) onClose();
+      return true;
     },
   });
 
