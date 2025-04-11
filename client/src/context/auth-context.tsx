@@ -76,7 +76,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       const response = await apiRequest('POST', API_ENDPOINTS.AUTH.LOGIN, credentials);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Invalid username or password');
+      }
+      
       const userData = await response.json();
+      
+      if (!userData || !userData.id) {
+        throw new Error('Invalid response from server');
+      }
+      
       setUser(userData);
       
       // Invalidate queries that might depend on auth state

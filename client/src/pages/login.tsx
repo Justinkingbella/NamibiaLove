@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
@@ -7,8 +8,8 @@ import { z } from 'zod';
 import { APP_NAME } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Loader2, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -31,11 +32,17 @@ const Login: React.FC = () => {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
+    if (isLoading) return;
+    
     try {
       await login(data);
     } catch (error) {
       // Error is handled in the useAuth hook
       console.error('Login error:', error);
+      form.setError('root', {
+        type: 'manual',
+        message: 'Invalid username or password'
+      });
     }
   };
 
@@ -82,7 +89,8 @@ const Login: React.FC = () => {
                         <Input 
                           placeholder="Username" 
                           className="rounded-xl h-14 px-4 border-gray-200" 
-                          {...field} 
+                          {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -100,13 +108,20 @@ const Login: React.FC = () => {
                           type="password" 
                           placeholder="Password" 
                           className="rounded-xl h-14 px-4 border-gray-200" 
-                          {...field} 
+                          {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
+                {form.formState.errors.root && (
+                  <div className="text-red-500 text-sm text-center">
+                    {form.formState.errors.root.message}
+                  </div>
+                )}
                 
                 <div className="pt-2">
                   <Button
