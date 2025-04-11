@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  Heart, MessageSquare, Share2, Bookmark, CheckCircle, Loader2, Send 
+  Heart, MessageSquare, Share2, Bookmark, CheckCircle, Loader2, Send, Edit, Trash 
 } from 'lucide-react';
 import { formatDate, getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -49,18 +49,19 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
   const [newComment, setNewComment] = useState('');
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [expandedComments, setExpandedComments] = useState(false);
-  
+  const [editingPost, setEditingPost] = useState(false); // Added state for editing
+
   // Determine if comments are an array or just a count
   const commentsArray = Array.isArray(post.comments) ? post.comments : [];
   const commentsCount = Array.isArray(post.comments) ? post.comments.length : post.comments;
-  
+
   // Fetch detailed post with comments if needed and not already loaded
   const { data: detailedPost, isLoading: commentsLoading } = useQuery<Post>({
     queryKey: [API_ENDPOINTS.POSTS.DETAIL(post.id)],
     enabled: expandedComments && !Array.isArray(post.comments),
     staleTime: 30000, // 30 seconds
   });
-  
+
   // Comments to display
   const displayComments = detailedPost?.comments && Array.isArray(detailedPost.comments) 
     ? detailedPost.comments 
@@ -120,6 +121,17 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
     setExpandedComments(!expandedComments);
   };
 
+  const handleDelete = async () => {
+    // Placeholder for delete functionality.  Replace with actual API call.
+    try {
+      await apiRequest('DELETE', API_ENDPOINTS.POSTS.DELETE(post.id));
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.POSTS.FEED] });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      // Handle error appropriately (e.g., show error message)
+    }
+  };
+
   return (
     <div className="mb-6 bg-white rounded-lg shadow">
       {/* Post header */}
@@ -131,7 +143,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
               <AvatarFallback>{getInitials(post.user.fullName)}</AvatarFallback>
             </Avatar>
           </Link>
-          
+
           <div>
             <div className="flex items-center space-x-1">
               <Link href={`/profile/${post.user.id}`}>
@@ -144,7 +156,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
         </div>
         <p className="mt-3 text-sm">{post.content}</p>
       </div>
-      
+
       {/* Post media */}
       {post.mediaUrl && (
         <div>
@@ -155,11 +167,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
           />
         </div>
       )}
-      
+
       {/* Post actions */}
       <div className="p-4">
         <div className="flex justify-between items-center mb-3">
-          <div className="flex space-x-4">
+          <div className="flex items-center space-x-4">
             <Button 
               variant="ghost" 
               size="sm" 
@@ -174,7 +186,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
               )}
               <span className="text-sm">{post.likes}</span>
             </Button>
-            
+
             <Button 
               variant="ghost" 
               size="sm" 
@@ -184,10 +196,31 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
               <MessageSquare className="h-5 w-5 mr-1" />
               <span className="text-sm">{commentsCount}</span>
             </Button>
-            
+
             <Button variant="ghost" size="sm" className="p-1">
               <Share2 className="h-5 w-5" />
             </Button>
+
+            {post.user.id === user?.id && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 text-blue-500"
+                  onClick={() => setEditingPost(true)}
+                >
+                  <Edit className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 text-red-500"
+                  onClick={handleDelete}
+                >
+                  <Trash className="h-5 w-5" />
+                </Button>
+              </>
+            )}
           </div>
           <Button 
             variant="ghost" 
@@ -198,7 +231,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
             <Bookmark className={cn("h-5 w-5", isBookmarked && "fill-current")} />
           </Button>
         </div>
-        
+
         {/* Comments section */}
         {expandedComments && (
           <div className="border-t border-gray-100 pt-3">
@@ -240,14 +273,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
                 )}
               </>
             )}
-            
+
             {/* Comment input */}
             <div className="flex items-center mt-3 focus-within:border-primary">
               <Avatar className="h-8 w-8 mr-2">
                 <AvatarImage src={user?.profilePicture} alt={user?.fullName || 'Your profile'} />
                 <AvatarFallback>{user ? getInitials(user.fullName) : 'You'}</AvatarFallback>
               </Avatar>
-              
+
               <div className="flex-1 flex items-center border rounded-full pr-1 focus-within:border-primary">
                 <Input
                   type="text"
@@ -263,7 +296,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
                   }}
                   disabled={commentMutation.isPending}
                 />
-                
+
                 <Button 
                   className="text-primary font-medium text-sm h-8 w-8 p-0 rounded-full"
                   onClick={handleComment}
