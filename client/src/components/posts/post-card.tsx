@@ -170,16 +170,22 @@ const PostCard: React.FC<PostCardProps> = ({ post, onCommentAdded }) => {
             <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
           </div>
         </div>
-        <p className="mt-3 text-sm">{post.content}</p>
+        {post.content && (
+          <p className="mt-3 text-sm whitespace-pre-wrap break-words">{post.content}</p>
+        )}
       </div>
 
       {/* Post media */}
-      {post.mediaUrl && (
+      {post.mediaUrl && post.mediaUrl.length > 0 && (
         <div>
           <img 
             src={post.mediaUrl} 
-            alt="Post media" 
+            alt="Post content"
             className="w-full max-h-96 object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
           />
         </div>
       )}
