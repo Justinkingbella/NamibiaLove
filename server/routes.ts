@@ -205,9 +205,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const loginData = loginSchema.parse(req.body);
       
       const user = await storage.getUserByUsername(loginData.username);
-      if (!user || user.password !== loginData.password) {
+      if (!user) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
+
+      try {
+        if (user.password !== loginData.password) {
+          return res.status(401).json({ message: "Invalid username or password" });
+        }
       
       // Set session
       req.session.userId = user.id;
