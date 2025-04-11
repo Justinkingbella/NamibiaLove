@@ -140,7 +140,6 @@ const Home: React.FC = () => {
                       <DialogTitle>Create New Post</DialogTitle>
                     </DialogHeader>
                     <CreatePost />
-                  </DialogHeader>
                 </DialogContent>
               </Dialog>
               </div>
